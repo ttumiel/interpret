@@ -18,4 +18,4 @@ def get_transforms(size, mean, std, rotate=10, flip_hor=True, flip_vert=False, p
     return transforms.Compose(tfms)
 
 def denorm(img):
-    return img.add(1).div(2).mul(255).clamp(0,255).permute(1,2,0).numpy().astype('uint8')
+    return img.add(1).div(2).mul(255).clamp(0,255).permute(1,2,0).cpu().numpy().astype('uint8')

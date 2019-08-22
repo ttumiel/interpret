@@ -34,4 +34,4 @@ def hook_output(model, detach=True, grad=False):
     return Hook(model, _hook_inner, detach=detach, is_forward=not grad)
 
 def is_listy(obj):
-    return (type(obj) == type([])) or (type(obj) == type((1,2)))
+    return (type(obj) == type([])) or (type(obj) == tuple)

@@ -1,6 +1,6 @@
 """Plot images"""
 
-from ..transforms import denorm
+from transforms import denorm
 from torchvision.utils import make_grid
 import matplotlib.pyplot as plt
 
