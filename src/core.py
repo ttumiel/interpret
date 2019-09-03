@@ -1,5 +1,7 @@
 """Core utilities for this project"""
 
+import torch
+
 def get(s,i):
     if isinstance(i, int):
         return list(s.children())[i]
@@ -10,4 +12,4 @@ def get(s,i):
             l = getattr(l, layer)
         return l
 
-nn.Module.__getitem__ = get
+torch.nn.Module.__getitem__ = get
