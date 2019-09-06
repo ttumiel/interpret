@@ -92,3 +92,44 @@ def denorm(im, decorrelate=False):
 
     im = Image.fromarray(im.round().astype('uint8'))
     return im
+
+
+def norm(im):
+    mean, std = imagenet_stats
+    mean, std = torch.tensor(mean), torch.tensor(std)
+    im /= 255
+    im -= mean[..., None, None]
+    im /= std[..., None, None]
+    im.unsqueeze_(0)
+    im.requires_grad_(True)
+    return im
+
+color_correlation_svd_sqrt = np.asarray([[0.26, 0.09, 0.02],
+                                        [0.27, 0.00, -0.05],
+                                        [0.27, -0.09, 0.03]]).astype("float32")
+
+
+max_norm_svd_sqrt = np.max(np.linalg.norm(color_correlation_svd_sqrt, axis=0))
+color_mean = [0.48, 0.46, 0.41]
+
+def _linear_decorelate_color(t):
+    """Multiply input by sqrt of emperical (ImageNet) color correlation matrix.
+
+    If you interpret t's innermost dimension as describing colors in a
+    decorrelated version of the color space (which is a very natural way to
+    describe colors -- see discussion in Feature Visualization article) the way
+    to map back to normal colors is multiply the square root of your color
+    correlations.
+    """
+    # check that inner dimension is 3?
+    t_flat = t.squeeze().view([3, -1])
+    color_correlation_normalized = color_correlation_svd_sqrt / max_norm_svd_sqrt
+    t_flat = torch.tensor(color_correlation_normalized) @ t_flat
+    t = t_flat.view(t.size())
+    return t
+
+def fourier_image(size=64, noise_scale=0.01):
+    noise=noise_scale*torch.randn([3,size,size,2])
+    tfm_noise = torch.fft(noise, 3, normalized=True)
+    noise = torch.irfft(tfm_noise, 3, onesided=False)
+    return noise.unsqueeze_(0).clone().detach().requires_grad_(True)
