@@ -1,6 +1,6 @@
 """Core utilities for this project"""
 
-import torch
+from torch import nn
 
 def get(s,i):
     if isinstance(i, int):
@@ -12,4 +12,15 @@ def get(s,i):
             l = getattr(l, layer)
         return l
 
-torch.nn.Module.__getitem__ = get
+def freeze(s,bn=False):
+    for p in s.parameters():
+        if not isinstance(m, (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d)):
+            p.requires_grad_(False)
+
+def unfreeze(s):
+    for p in s.parameters():
+        p.requires_grad_(True)
+
+nn.Module.__getitem__ = get
+nn.Module.freeze = freeze
+nn.Module.unfreeze = unfreeze
