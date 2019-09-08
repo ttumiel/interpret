@@ -1,13 +1,20 @@
 """Plot images"""
 
-from transforms import denorm
+from .transforms import denorm
 from torchvision.utils import make_grid
 import matplotlib.pyplot as plt
+import numpy as np
+import math
 
 def show_image(tensor, normalize=False, ax=None):
-    img = denorm(tensor) if normalize else tensor
-    plt.imshow(img) if ax is not None else ax.imshow(img)
+    img = denorm(tensor) if normalize else np.array(tensor.clone())
+    plt.imshow(img) if ax is None else ax.imshow(img)
 
-def show_images(batched_tensor, normalize=False, figsize=(5,5)):
-    r = np.ceil(np.sqrt(batched_tensor.size(0)))
-    [show_image(batched_tensor[i],normalize,ax) for i,ax in enumerate(plt.subplots(r,r,figsize=figsize)[1].flatten())]
+def show_images(batched_tensor, normalize=False, figsize=(5,5), axis=False, labels=None):
+    r = math.ceil(math.sqrt(batched_tensor.size(0)))
+    axes = plt.subplots(r,r,figsize=figsize)[1].flatten()
+    for i,ax in enumerate(axes):
+        if i<batched_tensor.size(0):
+            show_image(batched_tensor[i],normalize,ax)
+        if not axis: ax.set_axis_off()
+        if labels is not None: ax.set_title(f'{labels[i]}')
