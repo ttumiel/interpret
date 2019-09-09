@@ -11,28 +11,38 @@ import torchvision
 from ..transforms import *
 import numpy as np
 
-tfms = torchvision.transforms.Compose([
-    torchvision.transforms.RandomApply([Blur(2)], p=0.02),
-    # torchvision.transforms.RandomApply([RandomTfm(rotate, 15)], p=0.1),
-    # torchvision.transforms.RandomApply([RandomTfm(scale, [0.9, 1.1])], p=0.1),
+VIS_TFMS = torchvision.transforms.Compose([
+    # torchvision.transforms.RandomApply([GaussianBlur(3, 3, 0.5)], p=0.001),
+    torchvision.transforms.RandomApply([
+                                        GaussianBlur(3, 3, 0.5),
+                                        RandomTfm(rotate, 5),
+                                        RandomTfm(scale, [0.95, 1.05])
+                                        ], p=0.5),
+    # torchvision.transforms.RandomApply([RandomTfm(scale, [0.95, 1.05])], p=0.005),
 ])
 
 
 class CutModel():
     "Class to visualise particular layers by optimisation"
 
-    def __init__(self, model, layer, channel, tfms=tfms, optim=torch.optim.Adam):
+    def __init__(self, model, layer, channel, tfms=VIS_TFMS, optim=torch.optim.Adam, neuron=None):
         self.model, self.layer, self.channel = model, layer, channel
         self.active = False
         self.tfms = tfms
         self.optim_fn = optim
+        self.neuron = neuron
         print(f"Optimising for layer {layer}, channel {channel}")
+        self.model.eval()
         for p in self.model.parameters():
             p.requires_grad_(False)
 
     def __call__(self, x):
         def activation_fn(module, input, output):
+            if self.neuron is None:
             self.loss = -torch.mean(output[:, self.channel])
+            else:
+                if isinstance(module, nn.Conv2d):
+                    self.loss = -torch.mean(output[:, self.channel, self.neuron])
             self.active = True
 
         with Hook(self.model[self.layer], activation_fn, detach=False):
@@ -43,24 +53,32 @@ class CutModel():
                     break
         return x
 
-    def run(self, input_img, transform=False, iters=50):
-        self.optim = self.optim_fn([input_img], lr=0.05, weight_decay=1e-6)
+    def vis(self, input_img, transform=False, iters=50, decorrelate=False, lr=0.05, wd=1e-3):
+        self.optim = self.optim_fn([input_img], lr=lr, weight_decay=wd)
         for i in range(iters):
             self(input_img)
             self.loss.backward()
 
-            if i % 10 == 0:
+            if i % 100 == 0:
                 print(i, self.loss.item())
-                display(zoom(denorm(input_img)))
-
-            if transform and i % 6 == 0:
-                with torch.no_grad():
-                    input_img = self.tfms(input_img)
-                input_img.requires_grad_(True)
+                display(zoom(denorm(input_img), 2))
 
             self.optim.step()
             self.optim.zero_grad()
-            input_img.data.clamp_(-2, 2)
+            # input_img.data.clamp_(-2, 2)
+
+            if transform:
+                with torch.no_grad():
+                    input_img = self.tfms(input_img)
+
+            # if decorrelate: # Move to image generation
+            #     input_img = _linear_decorelate_color(input_img).detach()
+
+            input_img = input_img.requires_grad_(True)
+            self.optim = self.optim_fn([input_img], lr=lr, weight_decay=wd)
+
+        return input_img
+
 
 
 def random_im(size=64):
