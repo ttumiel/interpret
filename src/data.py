@@ -3,7 +3,7 @@ from torchvision.datasets import ImageFolder
 from .utils import *
 import numpy as np
 from PIL import Image, ImageDraw
-import random
+import random, math
 
 class ImageBunch(Dataset):
     def __init__(self, train_dl, valid_dl, test_dl=None):
@@ -20,7 +20,7 @@ def random_shapes(size, shape, min_size, max_size, coord_limits, background, col
     coord_limits: [x_min, x_max, y_min, y_max]. If None, defaults to edges of size.
     """
     if coord_limits is None:
-        coord_limits = [0, size, 0, size]
+        coord_limits = [size/10, size*9/10, size/10, size*9/10]
 
     bgs = ["uniform", "random", "color"]
     assert background in bgs, f'Choose background from {bgs}'
@@ -35,8 +35,9 @@ def random_shapes(size, shape, min_size, max_size, coord_limits, background, col
     draw = ImageDraw.Draw(im)
 
     def draw_circle():
-        x0,y0 = np.random.randint(*coord_limits[:2]), np.random.randint(*coord_limits[2:])
-        l = np.random.randint(min_size, max_size)
+        min_x,max_x,min_y,max_y=coord_limits
+        x0,y0 = np.random.randint(min_x, max_x), np.random.randint(min_y, max_y)
+        l = random.choice([1,-1])*np.random.randint(min_size, max_size)
         x1 = x0+l
         y1 = y0+l
         if x0>x1: x0,x1=x1,x0
@@ -47,10 +48,9 @@ def random_shapes(size, shape, min_size, max_size, coord_limits, background, col
 
     def draw_rect():
         x0,y0 = np.random.randint(*coord_limits[:2]), np.random.randint(*coord_limits[2:])
-        l1 = np.random.randint(min_size, max_size)
-        l2 = np.random.randint(min_size, max_size)
-        x1 = x0+l1 if x0>coord_limits[1]/2 else x0-l1
-        y1 = y0+l2 if y0>coord_limits[3]/2 else x0-l2
+        l = np.random.randint(min_size, max_size)
+        angle = random.random()*math.pi*2
+        x1,y1 = x0+l*math.cos(angle), y0+l*math.sin(angle)
         coords = [x0, y0 ,x1, y1]
         fill = tuple(np.random.randint(0,256,3))
         draw.rectangle(coords, fill=fill)
