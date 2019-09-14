@@ -5,13 +5,13 @@ from PIL import Image
 from ..transforms import denorm
 import matplotlib.pyplot as plt
 
-def gradcam(model, img, im_class, layer_num=0, heatmap_thresh:int=16, image:bool=True):
+def gradcam(model, img, im_class, layer=0, heatmap_thresh=16, image=True, show_im=True):
     m = model.eval()
     cl = int(im_class)
     xb = img
 
-    with hook_output(m[layer_num]) as hook_a:
-        with hook_output(m[layer_num], grad=True) as hook_g:
+    with hook_output(m[layer]) as hook_a:
+        with hook_output(m[layer], grad=True) as hook_g:
             preds = m(xb)
             preds[0,int(cl)].backward()
     acts  = hook_a.stored[0].cpu()
@@ -23,6 +23,6 @@ def gradcam(model, img, im_class, layer_num=0, heatmap_thresh:int=16, image:bool
             xb_im = Image.fromarray(denorm(xb[0]))
             _,ax = plt.subplots()
             sz = list(xb_im.size)
-            ax.imshow(xb_im)
+            if show_im: ax.imshow(xb_im)
             ax.imshow(mult, alpha=0.4, extent=(0,*sz[::-1],0), interpolation='bilinear', cmap='magma')
         return mult
