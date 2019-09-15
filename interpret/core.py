@@ -13,9 +13,13 @@ def get(s,i):
         return l
 
 def freeze(s,bn=False):
-    for p in s.parameters():
+    def inner(m):
         if not isinstance(m, (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d)):
-            p.requires_grad_(False)
+            if hasattr(m, 'weight') and m.weight is not None:
+                m.weight.requires_grad_(False)
+            if hasattr(m, 'bias') and m.bias is not None:
+                m.bias.requires_grad_(False)
+    s.apply(inner)
 
 def unfreeze(s):
     for p in s.parameters():
