@@ -39,7 +39,7 @@ class CutModel():
     def __call__(self, x):
         def activation_fn(module, input, output):
             if self.neuron is None:
-            self.loss = -torch.mean(output[:, self.channel])
+                self.loss = -torch.mean(output[:, self.channel])
             else:
                 if isinstance(module, nn.Conv2d):
                     self.loss = -torch.mean(output[:, self.channel, self.neuron])
@@ -94,11 +94,10 @@ def random_im(size=64):
     return im
 
 
-def denorm(im, decorrelate=False):
+def denorm(im):
     im = im.detach().clone().cpu().squeeze()
     mean, std = imagenet_stats
     mean, std = torch.tensor(mean), torch.tensor(std)
-    if decorrelate: im = _linear_decorelate_color(im)
 
     im *= std[..., None, None]
     im += mean[..., None, None]
@@ -131,7 +130,7 @@ max_norm_svd_sqrt = np.max(np.linalg.norm(color_correlation_svd_sqrt, axis=0))
 color_mean = [0.48, 0.46, 0.41]
 
 def _linear_decorelate_color(t):
-    """Multiply input by sqrt of emperical (ImageNet) color correlation matrix.
+    """Multiply input by sqrt of empirical (ImageNet) color correlation matrix.
 
     If you interpret t's innermost dimension as describing colors in a
     decorrelated version of the color space (which is a very natural way to
@@ -142,12 +141,14 @@ def _linear_decorelate_color(t):
     # check that inner dimension is 3?
     t_flat = t.squeeze().view([3, -1])
     color_correlation_normalized = color_correlation_svd_sqrt / max_norm_svd_sqrt
-    t_flat = torch.tensor(color_correlation_normalized) @ t_flat
+    t_flat = torch.tensor(color_correlation_normalized).t() @ t_flat # should this be transposed??
     t = t_flat.view(t.size())
     return t
 
-def fourier_image(size=64, noise_scale=0.01):
+def fourier_image(size=64, noise_scale=0.01, decorrelate=False):
     noise=noise_scale*torch.randn([3,size,size,2])
     tfm_noise = torch.fft(noise, 3, normalized=True)
     noise = torch.irfft(tfm_noise, 3, onesided=False)
+    if decorrelate:
+        noise = _linear_decorelate_color(noise)
     return noise.unsqueeze_(0).clone().detach().requires_grad_(True)
