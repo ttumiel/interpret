@@ -65,8 +65,8 @@ class ReducingGaussianBlur(GaussianBlur):
 def get_transforms(size, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], rotate=10, flip_hor=True, flip_vert=False, perspective=True, color_jitter=True, ):
     tfms = [
         transforms.Resize((size, size)),
-        transforms.RandomRotation(rotate)
     ]
+    if rotate is not None: tfms += [transforms.RandomRotation(rotate)]
     if flip_hor: tfms += [transforms.RandomHorizontalFlip()]
     if flip_vert: tfms += [transforms.RandomVerticalFlip()]
     if perspective: tfms += [transforms.RandomPerspective()]
