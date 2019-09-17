@@ -4,9 +4,12 @@ import torch
 import random, math
 from torch.nn.functional import affine_grid, grid_sample
 from torch.nn import functional as F
+from PIL import Image
+from .imagenet import imagenet_stats
 
 class Blur():
-    def __init__(self, kernel_size, variance=1., mean=1.):
+    "Apply a uniform blur to an input with kernel_size"
+    def __init__(self, kernel_size):
         channels=3
         self.filter = nn.Conv2d(channels,channels,kernel_size, bias=False, groups=channels)
         kernel = torch.ones((channels,1,kernel_size,kernel_size))/(kernel_size*kernel_size)
@@ -21,6 +24,15 @@ class Blur():
         return self.filter(x)
 
 class GaussianBlur():
+    """
+    Apply a blur to an input with a Gaussian kernel.
+
+    The input should have the same number of channels as `channels`. 
+    The Gaussian kernel has size kernel_size, and standard deviation sigma.
+
+    Sigma >> 1 will create an almost uniform kernel, while
+    sigma << 1 will create a very focused kernel (less blurring).
+    """
     def __init__(self, channels, kernel_size, sigma, dim=2):
         self.channels, self.kernel_size, self.sigma = channels, kernel_size, sigma
         self.get_kernel(self.channels, self.kernel_size, self.sigma, dim=2)
@@ -55,6 +67,7 @@ class GaussianBlur():
         return self.conv(x)
 
 class ReducingGaussianBlur(GaussianBlur):
+    "Dynamically reduce the sigma value after applying every blur."
     def __call__(self, x):
         self.sigma *= 0.95
         self.get_kernel(self.channels, self.kernel_size, self.sigma)
@@ -62,11 +75,30 @@ class ReducingGaussianBlur(GaussianBlur):
         self.conv.weight.requires_grad_(False)
         return super().__call__(x)
 
-def get_transforms(size, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], rotate=10, flip_hor=True, flip_vert=False, perspective=True, color_jitter=True, ):
+def get_transforms(size, mean=imagenet_stats[0], std=imagenet_stats[1], rotate=10, 
+                    flip_hor=True, flip_vert=False, perspective=True, color_jitter=True,
+                    translate=None, zoom=None, shear=None):
+    """
+    Returns a set of default transformations.
+
+    size - Resize image (int).
+    mean and std - Normalize image.
+    rotate - Rotate randomly between (-rotate, rotate) degrees.
+    flip_hor - Randomly flip horizontally with p=0.5
+    flip_vert - Randomly flip vertically with p=0.5
+    perspective - Apply a perspective warp.
+    color_jitter - Jitter the colors in the image.
+    translate - Randomly translate the center of the 
+                image horizontally and vertically (tuple)
+    zoom - Randomly scale the image (tuple)
+    shear - Randomly shear the image (int or tuple)
+    """
     tfms = [
         transforms.Resize((size, size)),
     ]
-    if rotate is not None: tfms += [transforms.RandomRotation(rotate)]
+    # if rotate is not None: tfms += [transforms.RandomRotation(rotate)]
+    tfms += [transforms.RandomAffine(rotate, translate=translate, scale=zoom, 
+                            shear=shear, resample=Image.BILINEAR, fillcolor=0)]
     if flip_hor: tfms += [transforms.RandomHorizontalFlip()]
     if flip_vert: tfms += [transforms.RandomVerticalFlip()]
     if perspective: tfms += [transforms.RandomPerspective()]
@@ -79,8 +111,8 @@ def get_transforms(size, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], 
     ]
     return transforms.Compose(tfms)
 
-def denorm(img):
-    return img.add(1).div(2).mul(255).clamp(0,255).permute(1,2,0).cpu().numpy().astype('uint8')
+# def denorm(img):
+#     return img.add(1).div(2).mul(255).clamp(0,255).permute(1,2,0).cpu().numpy().astype('uint8')
 
 def affine(mat):
     "applies an affine transform"
@@ -120,7 +152,8 @@ def scale(scale):
                         ], dtype=torch.float32).unsqueeze(0)/scale
     return affine(mat)
 
-class RandomTfm():
+class RandomAffineTfm():
+    "Randomly apply an affine transform on a tensor."
     def __init__(self, tfm, *args):
         self.tfm = tfm
         self.args = args
