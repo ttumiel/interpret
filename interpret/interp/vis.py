@@ -93,34 +93,6 @@ def random_im(size=64):
     im.requires_grad_(True)
     return im
 
-
-def denorm(im):
-    im = im.detach().clone().cpu().squeeze()
-    mean, std = imagenet_stats
-    mean, std = torch.tensor(mean), torch.tensor(std)
-
-    im *= std[..., None, None]
-    im += mean[..., None, None]
-    im *= 254
-    im += 0.5
-    im = im.permute(1, 2, 0).numpy()
-    im[im > 255] = 255
-    im[im < 0] = 0
-
-    im = Image.fromarray(im.round().astype('uint8'))
-    return im
-
-
-def norm(im):
-    mean, std = imagenet_stats
-    mean, std = torch.tensor(mean), torch.tensor(std)
-    im /= 255
-    im -= mean[..., None, None]
-    im /= std[..., None, None]
-    im.unsqueeze_(0)
-    im.requires_grad_(True)
-    return im
-
 color_correlation_svd_sqrt = np.asarray([[0.26, 0.09, 0.02],
                                         [0.27, 0.00, -0.05],
                                         [0.27, -0.09, 0.03]]).astype("float32")
