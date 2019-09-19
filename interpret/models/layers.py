@@ -36,7 +36,7 @@ class Learner():
             self.data = data
         else:
             try:
-                self.data = torch.utils.data.DataLoader(data, bs=64)
+                self.data = torch.utils.data.DataLoader(data, batch_size=64)
             except:
                 raise Exception("`data` should be a DataLoader or Dataset.")
 
@@ -68,8 +68,8 @@ class Learner():
 
             print(f"{epoch} - loss: {round(np.mean(self.losses[-len(self.data):]),3)}  {accuracy.__name__}: {round(np.mean(self.accs[-len(self.data):]), 3)}")
 
-    def predict(self, data=None):
-        # self.model.eval()
+    def predict(self, data=None, test=True):
+        if test: self.model.eval()
         all_preds = []
         if data is None:
             for x,y in self.data:
@@ -102,3 +102,6 @@ class Learner():
 
     def load(self, fn, strict=True):
         self.model.load_state_dict(torch.load(fn), strict=strict)
+
+    def __repr__(self):
+        return self.model.__repr__()
