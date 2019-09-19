@@ -1,14 +1,15 @@
 import torch
-from imagenet import imagenet_stats
 from pathlib import Path
 from PIL import Image
+
+from .imagenet import imagenet_stats
 
 Path.ls = lambda c: list(c.iterdir())
 
 def zoom(im, zoom=2):
     return im.transform((int(im.size[0]*zoom), int(im.size[1]*zoom)), Image.EXTENT, (0, 0, im.size[0], im.size[1]))
 
-def denorm(im, mean=imagenet_stats[0], std=imagenet_stats[1]):
+def denorm(im, mean=imagenet_stats[0], std=imagenet_stats[1], image=True):
     "Denormalize an image"
     if isinstance(im, torch.Tensor):
         im = im.detach().clone().cpu().squeeze()
@@ -23,8 +24,9 @@ def denorm(im, mean=imagenet_stats[0], std=imagenet_stats[1]):
     im[im > 255] = 255
     im[im < 0] = 0
 
-    im = Image.fromarray(im.round().astype('uint8'))
-    return im
+    im = im.round().astype('uint8')
+    if not image: return im
+    return Image.fromarray(im)
 
 
 def norm(im, mean=imagenet_stats[0], std=imagenet_stats[1]):

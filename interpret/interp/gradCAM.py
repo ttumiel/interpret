@@ -2,10 +2,10 @@ import torch.nn.functional as F
 from ..hooks import *
 from .. import core
 from PIL import Image
-from ..transforms import denorm
+from ..utils import denorm
 import matplotlib.pyplot as plt
 
-def gradcam(model, img, im_class, layer=0, heatmap_thresh=16, image=True, show_im=True):
+def gradcam(model, img, im_class, layer=0, heatmap_thresh=16, image=True, show_im=True, ax=None):
     m = model.eval()
     cl = int(im_class)
     xb = img
@@ -20,8 +20,8 @@ def gradcam(model, img, im_class, layer=0, heatmap_thresh=16, image=True, show_i
         grad_chan = grad.mean(1).mean(1)
         mult = F.relu(((acts*grad_chan[...,None,None])).sum(0))
         if image:
-            xb_im = Image.fromarray(denorm(xb[0]))
-            _,ax = plt.subplots()
+            xb_im = Image.fromarray(denorm(xb[0], image=False))
+            if ax is None: _,ax = plt.subplots()
             sz = list(xb_im.size)
             if show_im: ax.imshow(xb_im)
             ax.imshow(mult, alpha=0.4, extent=(0,*sz[::-1],0), interpolation='bilinear', cmap='magma')

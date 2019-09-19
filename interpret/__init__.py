@@ -6,5 +6,6 @@ from .plots import *
 from .transforms import *
 from .utils import *
 from .models.layers import *
-from interp.gradCAM import *
-from interp.vis import *
+from .interp.gradCAM import *
+from .interp.vis import *
+from .datasets import DataType
