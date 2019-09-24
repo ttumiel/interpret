@@ -27,7 +27,7 @@ class GaussianBlur():
     """
     Apply a blur to an input with a Gaussian kernel.
 
-    The input should have the same number of channels as `channels`. 
+    The input should have the same number of channels as `channels`.
     The Gaussian kernel has size kernel_size, and standard deviation sigma.
 
     Sigma >> 1 will create an almost uniform kernel, while
@@ -75,7 +75,7 @@ class ReducingGaussianBlur(GaussianBlur):
         self.conv.weight.requires_grad_(False)
         return super().__call__(x)
 
-def get_transforms(size, mean=imagenet_stats[0], std=imagenet_stats[1], rotate=10, 
+def get_transforms(size, mean=imagenet_stats[0], std=imagenet_stats[1], rotate=10,
                     flip_hor=True, flip_vert=False, perspective=True, color_jitter=True,
                     translate=None, zoom=None, shear=None):
     """
@@ -88,7 +88,7 @@ def get_transforms(size, mean=imagenet_stats[0], std=imagenet_stats[1], rotate=1
     flip_vert - Randomly flip vertically with p=0.5
     perspective - Apply a perspective warp.
     color_jitter - Jitter the colors in the image.
-    translate - Randomly translate the center of the 
+    translate - Randomly translate the center of the
                 image horizontally and vertically (tuple)
     zoom - Randomly scale the image (tuple)
     shear - Randomly shear the image (int or tuple)
@@ -97,7 +97,7 @@ def get_transforms(size, mean=imagenet_stats[0], std=imagenet_stats[1], rotate=1
         transforms.Resize((size, size)),
     ]
     # if rotate is not None: tfms += [transforms.RandomRotation(rotate)]
-    tfms += [transforms.RandomAffine(rotate, translate=translate, scale=zoom, 
+    tfms += [transforms.RandomAffine(rotate, translate=translate, scale=zoom,
                             shear=shear, resample=Image.BILINEAR, fillcolor=0)]
     if flip_hor: tfms += [transforms.RandomHorizontalFlip()]
     if flip_vert: tfms += [transforms.RandomVerticalFlip()]
@@ -160,3 +160,14 @@ class RandomAffineTfm():
 
     def __call__(self, x):
         return self.tfm(*[random.random()*(a[1]-a[0])+a[0] if isinstance(a, list) else random.random()*a*2-a for a in self.args])(x)
+
+class RandomEvery():
+    def __init__(self, tfms, p=0.5):
+        self.tfms = tfms
+        self.p = p
+
+    def __call__(self, x):
+        for t in self.tfms:
+            if random.random() < self.p:
+                x = t(x)
+        return x

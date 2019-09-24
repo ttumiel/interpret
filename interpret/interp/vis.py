@@ -13,13 +13,11 @@ import numpy as np
 from ..utils import denorm
 
 VIS_TFMS = torchvision.transforms.Compose([
-    # torchvision.transforms.RandomApply([GaussianBlur(3, 3, 0.5)], p=0.001),
-    torchvision.transforms.RandomApply([
+    RandomEvery([
                                         GaussianBlur(3, 3, 0.5),
                                         RandomAffineTfm(rotate, 5),
-                                        RandomAffineTfm(scale, [0.95, 1.05])
-                                        ], p=0.5),
-    # torchvision.transforms.RandomApply([RandomTfm(scale, [0.95, 1.05])], p=0.005),
+                    RandomAffineTfm(scale, [0.98, 1.05])
+                ], p=0.5)
 ])
 
 
