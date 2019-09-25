@@ -17,7 +17,7 @@ class DataType(Enum):
 class DiabeticRetData(Dataset):
     """
     A dataset holding the diabetic retinopathy image data from
-    LINK.
+    https://www.kaggle.com/c/aptos2019-blindness-detection.
 
     data_type - Train, Valid or Test from the DataType enum.
     path - The path to the image data.
@@ -39,7 +39,7 @@ class DiabeticRetData(Dataset):
         self.data_type = data_type
         self.path = path
         self.tfms = tfms
-        
+
         if self.data_type == DataType.Train:
             self.idxs = train_idxs
         elif self.data_type == DataType.Valid:
@@ -48,8 +48,7 @@ class DiabeticRetData(Dataset):
             self.idxs = test_idxs
         else:
             raise Exception(f"data_type must be a {DataType}")
-            
-        
+
     def __getitem__(self, idx):
         i = self.idxs[idx]
         filename, label = self.df.iloc[i]
@@ -57,10 +56,10 @@ class DiabeticRetData(Dataset):
         if self.tfms is not None:
             img = self.tfms(img)
         return img, label
-    
+
     def __len__(self):
         return len(self.idxs)
-    
+
     def show(self, num=9, figsize=(8,8), random=False):
         r = math.ceil(math.sqrt(num))
         axes = plt.subplots(r,r,figsize=figsize)[1].flatten()
@@ -72,10 +71,10 @@ class DiabeticRetData(Dataset):
                 ax.imshow(im)
                 ax.set_title(f'{label}')
             ax.set_axis_off()
-        
+
     @staticmethod
     def decode_label(lb):
-        labels = {0: "None", 1: "Mild", 2: "Moderate", 3: "Severe", 4: "Prolifertive"}
+        labels = {0: "None", 1: "Mild", 2: "Moderate", 3: "Severe", 4: "Proliferative"}
         return labels[lb]
 
 
@@ -91,15 +90,16 @@ class RandomShape(Dataset):
         self.size = size
         self.l = ds_length
         self.tfms = tfms
-        
+
     def __len__(self):
         return self.l
-    
+
     def __getitem__(self, _):
-        s = random_shapes(self.size, shape=None, min_size=self.size/3, max_size=self.size, 
+        s = random_shapes(self.size, shape=None, min_size=self.size/3, max_size=self.size,
                              coord_limits=None, background='uniform', number=1)
         return self.tfms(s[0]),s[1] if self.tfms is not None else s
-    
-    def get_name(self, i):
+
+    @staticmethod
+    def decode_label(i):
         labels = {0: 'rectangle', 1: 'circle', 2: 'triangle'}
         return labels[i]
