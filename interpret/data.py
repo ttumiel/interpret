@@ -5,19 +5,18 @@ import numpy as np
 from PIL import Image, ImageDraw
 import random, math
 
-class ImageBunch(Dataset):
-    def __init__(self, train_dl, valid_dl, test_dl=None):
-        self.train_dl = train_dl
-        self.valid_dl = valid_dl
-        self.test_dl = test_dl
-
-    @classmethod
-    def from_folder(cls, path, bs=64, shuffle=True, tfms=None):
-        return cls(ImageFolder(Path(path)/'train', transform=tfms), ImageFolder(Path(path)/'valid', transform=tfms))
-
 def random_shapes(size, shape, min_size, max_size, coord_limits, background, color=True, number=1):
     """
+    Generate images of random shapes.
+
+    size: the pixel size of the image.
+    shape: one of {'circle', 'rectangle', 'triangle'}
+    min_size: the minimum pixel size of the shape.
+    max_size: the maximum pixel size of the shape.
     coord_limits: [x_min, x_max, y_min, y_max]. If None, defaults to edges of size.
+    background: the background of the images. One of {'uniform', 'random', 'color'}
+    color: whether the images a RGB
+    number: the number of shapes present in the image
     """
     if coord_limits is None:
         coord_limits = [size/10, size*9/10, size/10, size*9/10]
