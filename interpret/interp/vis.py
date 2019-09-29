@@ -21,16 +21,17 @@ VIS_TFMS = torchvision.transforms.Compose([
 ])
 
 
-class CutModel():
+class OptVis():
     "Class to visualise particular layers by optimisation"
 
-    def __init__(self, model, layer, channel, tfms=VIS_TFMS, optim=torch.optim.Adam, neuron=None):
-        self.model, self.layer, self.channel = model, layer, channel
+    def __init__(self, model, objective, tfms=VIS_TFMS, optim=torch.optim.Adam, shortcut=False):
+        self.model = model
+        self.objective = objective
         self.active = False
         self.tfms = tfms
         self.optim_fn = optim
-        self.neuron = neuron
-        print(f"Optimising for layer {layer}, channel {channel}")
+        self.shortcut = shortcut
+        print(f"Optimising for {objective}")
         self.model.eval()
         for p in self.model.parameters():
             p.requires_grad_(False)
@@ -52,14 +53,14 @@ class CutModel():
                     break
         return x
 
-    def vis(self, input_img, transform=False, iters=50, decorrelate=False, lr=0.05, wd=1e-3):
+    def vis(self, input_img, transform=False, iters=50, decorrelate=False, lr=0.05, wd=0.):
         self.optim = self.optim_fn([input_img], lr=lr, weight_decay=wd)
         for i in range(iters):
-            self(input_img)
-            self.loss.backward()
+            self.objective(input_img)
+            self.objective.loss.backward() # Maybe change to just objective.backward?
 
-            if i % 100 == 0:
-                print(i, self.loss.item())
+            if i % 100 == 0: # add if verbose/print_every
+                print(i, self.objective.loss.item())
                 display(zoom(denorm(input_img), 2))
 
             self.optim.step()
@@ -78,6 +79,16 @@ class CutModel():
 
         return input_img
 
+    @classmethod
+    # layer and channel... How to make this extensible into layer,
+    # channel and neuron?? Separate classes feels wasteful
+    def from_layer(cls, model, layer, neuron=None, shortcut=False, **kwargs):
+        channel = None
+        if ":" in layer:
+            layer, channel = layer.split(":")
+            channel = int(channel)
+        obj = LayerObjective(model, layer, channel, neuron=neuron, shortcut=shortcut)
+        return cls(model, obj, **kwargs)
 
 
 def random_im(size=64):
