@@ -90,6 +90,68 @@ class OptVis():
         obj = LayerObjective(model, layer, channel, neuron=neuron, shortcut=shortcut)
         return cls(model, obj, **kwargs)
 
+class Objective():
+    # the objective class should have a callable function which
+    # should define the function on which to optimise.
+    # define __add__, __sub__, neg, mult, div, ...
+    def __init__(self):
+        pass
+
+    def __call__(self, module, input, output):
+        raise NotImplementedError
+
+    @property
+    def name(self):
+        return self.__class__.__name__
+
+    def __repr__(self):
+        return f"{self.name}"
+
+class LayerObjective(Objective):
+    def __init__(self, model, layer, channel, neuron=None, shortcut=False):
+        self.model = model
+        self.layer = layer
+        self.channel = channel
+        self.neuron = neuron
+        self.shortcut = shortcut
+        if self.shortcut:
+            self.active = False
+
+    # Feels belaboured? Change to separate classes for channel, layer, neuron
+    def __call__(self, x):
+        def layer_hook(module, input, output):
+            if self.neuron is None:
+                if self.channel is None:
+                    self.loss = -torch.mean(output)
+                else:
+                    self.loss = -torch.mean(output[:, self.channel])
+            else:
+                if isinstance(module, nn.Conv2d):
+                    # Check if channel is None and handle
+                    self.loss = -torch.mean(output[:, self.channel, self.neuron])
+                elif isinstance(module, nn.Linear):
+                    self.loss = -torch.mean(output[:, self.neuron])
+            self.active = True
+
+        with Hook(self.model[self.layer], layer_hook, detach=False):
+            if self.shortcut:
+                for i, m in enumerate(self.model.children()):
+                    x = m(x)
+                    if self.active:
+                        self.active = False
+                        break
+            else:
+                x = self.model(x)
+
+    def __repr__(self):
+        msg = f"{self.name}: {self.layer}"
+        if self.channel is not None:
+            msg += f":{self.channel}"
+        if self.neuron is not None:
+            msg += f":{self.neuron}"
+        if self.channel is None and self.neuron is not None:
+            msg += f"  {imagenet_labels[self.neuron]}"
+        return msg
 
 def random_im(size=64):
     "Create a random 'image' that is normalized according to the network"
