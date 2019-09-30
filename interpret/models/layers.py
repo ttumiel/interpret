@@ -3,6 +3,9 @@ from torch import nn
 from scipy.signal import medfilt
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm import tqdm
+from collections import OrderedDict
+import time
 
 from ..plots import plot
 
@@ -74,9 +77,13 @@ class Lambda(nn.Module):
     def forward(self, x):
         return self.fn(x)
 
+class Flatten(nn.Module):
+    def forward(self, x):
+        return x.view(x.size(0), -1)
+
 class Learner():
     "A class holding a network that can train and predict on a dataset."
-    def __init__(self, data, model, optim=torch.optim.Adam, loss_fn=nn.CrossEntropyLoss, wd=1e-5):
+    def __init__(self, data, model, val_data=None, optim=torch.optim.Adam, loss_fn=nn.CrossEntropyLoss, wd=1e-5):
         if isinstance(data, torch.utils.data.DataLoader):
             self.data = data
         else:
@@ -85,6 +92,7 @@ class Learner():
             except:
                 raise Exception("`data` should be a DataLoader or Dataset.")
 
+        self.val_data = val_data
         self.model = model
         self.optim_fn = optim
         self.loss_fn = loss_fn
@@ -92,14 +100,19 @@ class Learner():
         self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
         self.losses = []
         self.accs = []
+        self.val_losses = []
+        self.val_accs = []
 
     def fit(self, epochs, lr):
         self.model.train()
+        self.model.to(self.device)
         optim = self.optim_fn(self.model.parameters(), lr=lr, weight_decay=self.wd)
         crit = self.loss_fn()
 
         for epoch in range(epochs):
-            for x,y in self.data:
+            start_time = time.time()
+            pbar = tqdm(self.data, leave=False)
+            for x,y in pbar:
                 x,y = x.to(self.device),y.to(self.device)
 
                 preds = self.model(x)
@@ -111,7 +124,31 @@ class Learner():
                 optim.step()
                 optim.zero_grad()
 
-            print(f"{epoch} - loss: {round(np.mean(self.losses[-len(self.data):]),3)}  {accuracy.__name__}: {round(np.mean(self.accs[-len(self.data):]), 3)}")
+                pbar.set_description_str(f"{round(self.losses[-1], 2)} {round(self.accs[-1], 3)} ")
+
+            if self.val_data is not None:
+                pbar = tqdm(self.val_data, leave=False)
+                for x,y in pbar:
+                    x,y = x.to(self.device),y.to(self.device)
+
+                    preds = self.model(x)
+                    loss = crit(preds, y)
+                    # TODO: val_* should be averages at the end of every epoch
+                    self.val_accs.append(accuracy(preds, y))
+                    self.val_losses.append(loss.item())
+
+            end_time = time.time()
+            t = end_time-start_time
+            trn_loss = round(np.mean(self.losses[-len(self.data):]),3)
+            trn_acc = round(np.mean(self.accs[-len(self.data):]), 3)
+            msg = "{:3} | train loss: {:5} | train {}: {:5}".format(epoch, trn_loss, accuracy.__name__, trn_acc)
+            if self.val_data is not None:
+                val_loss = round(np.mean(self.val_losses[-len(self.val_data):]),3)
+                val_acc = round(np.mean(self.val_accs[-len(self.val_data):]), 3)
+                msg += " | val loss: {:5} | val {}: {:5}".format(val_loss, accuracy.__name__, val_acc)
+            msg += " | {:2}:{:2}".format(round(t//3600), round(t%3600/60))
+
+            pbar.write(msg)
 
     def predict(self, data=None, test=True):
         if test: self.model.eval()
@@ -141,6 +178,11 @@ class Learner():
         if smooth: losses, accs = medfilt(self.losses, 5), medfilt(self.accs, 5)
         plot(losses, title="Loss", ax=ax[0], x_lb='Batches')
         plot(accs, title="Accuracy", ax=ax[1], x_lb='Batches')
+        if self.val_data is not None:
+            # TODO: Add legend
+            plot(self.val_losses, title="Loss", ax=ax[0], x_lb='Batches')
+            plot(self.val_accs, title="Accuracy", ax=ax[1], x_lb='Batches')
+
 
     def save(self, fn):
         torch.save(self.model.state_dict(), fn)
