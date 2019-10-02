@@ -15,18 +15,20 @@ def show_images(batched_tensor, normalize=False, figsize=(5,5), axis=False, labe
     axes = plt.subplots(r,r,figsize=figsize)[1].flatten()
     for i,ax in enumerate(axes):
         if i<batched_tensor.size(0):
-            show_image(batched_tensor[i],normalize,ax)
+            show_image(batched_tensor[i],normalize,ax, **kwargs)
             if labels is not None: ax.set_title(f'{labels[i]}')
         if not axis: ax.set_axis_off()
 
-def plot(y, x=None, title=None, ax=None, x_lb=None, y_lb=None):
+def plot(y, x=None, title=None, ax=None, x_lb=None, y_lb=None, label=None):
     if ax is None:
-        plt.plot(y) if x is None else plt.plot(y, x)
+        plt.plot(y, label=label) if x is None else plt.plot(x, y, label=label)
         plt.title(title)
         plt.xlabel(x_lb)
         plt.ylabel(y_lb)
+        if label is not None: plt.legend()
     else:
-        ax.plot(y) if x is None else ax.plot(y, x)
+        ax.plot(y, label=label) if x is None else ax.plot(x, y, label=label)
         ax.set_title(title)
         ax.set_xlabel(x_lb)
         ax.set_ylabel(y_lb)
+        if label is not None: ax.legend()
