@@ -4,7 +4,10 @@ from torch import nn
 
 def get(s,i):
     if isinstance(i, int):
-        return list(s.children())[i]
+        if isinstance(s, nn.Sequential):
+            return _orig_seq_get(s, i)
+        else:
+            return list(s.children())[i]
     elif isinstance(i, str):
         layers = i.split("/")
         l = s
@@ -25,6 +28,8 @@ def unfreeze(s):
     for p in s.parameters():
         p.requires_grad_(True)
 
+_orig_seq_get = nn.Sequential.__getitem__
+nn.Sequential.__getitem__ = get
 nn.Module.__getitem__ = get
 nn.Module.freeze = freeze
 nn.Module.unfreeze = unfreeze
