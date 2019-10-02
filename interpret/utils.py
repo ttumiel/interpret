@@ -34,3 +34,15 @@ def norm(im, mean=imagenet_stats[0], std=imagenet_stats[1]):
     im.unsqueeze_(0)
     im.requires_grad_(True)
     return im
+
+def get_layer_names(m, upper_name=''):
+    "Recursively show a network's named layers"
+    name = ''
+    if type(m) == tuple:
+        name, m = m
+
+    if hasattr(m, 'named_children') and len(list(m.named_children()))!=0:
+        for layer in m.named_children():
+            get_layer_names(layer, upper_name=upper_name+name+"/" if name != '' else upper_name)
+    else:
+        print(upper_name+name)
