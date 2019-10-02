@@ -6,6 +6,7 @@ from torch.nn.functional import affine_grid, grid_sample
 from torch.nn import functional as F
 from PIL import Image
 from .imagenet import imagenet_stats
+import albumentations as A
 
 class Blur():
     "Apply a uniform blur to an input with kernel_size"
@@ -103,13 +104,21 @@ def get_transforms(size, mean=imagenet_stats[0], std=imagenet_stats[1], rotate=1
     if flip_vert: tfms += [transforms.RandomVerticalFlip()]
     if perspective: tfms += [transforms.RandomPerspective()]
 
-    brightness, contrast, saturation, hue = 0.3, 0.2, 0.2, 0.2
+    brightness, contrast, saturation, hue = 0.25, 0.25, 0.25, 0
     if color_jitter: tfms += [transforms.ColorJitter(brightness,contrast,saturation,hue)]
     tfms += [
         transforms.ToTensor(),
         transforms.Normalize(mean, std)
     ]
     return transforms.Compose(tfms)
+
+def no_transforms(size, mean=imagenet_stats[0], std=imagenet_stats[1]):
+    "Return a list of transforms that only resizes and normalizes data."
+    return transforms.Compose([
+        transforms.Resize((size, size)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean, std)
+    ])
 
 # def denorm(img):
 #     return img.add(1).div(2).mul(255).clamp(0,255).permute(1,2,0).cpu().numpy().astype('uint8')
@@ -129,6 +138,7 @@ def rotate(angle=20):
     rot = torch.tensor([[math.cos(rad), -math.sin(rad), 0],
                         [math.sin(rad), math.cos(rad), 0],
                         ]).unsqueeze(0)
+    rot = rot.to('cuda' if torch.cuda.is_available() else 'cpu')
     return affine(rot)
 
 def translate(x,y):
@@ -136,6 +146,7 @@ def translate(x,y):
     rot = torch.tensor([[1, 0, -x],
                         [0, 1, y],
                         ], dtype=torch.float32).unsqueeze(0)
+    rot = rot.to('cuda' if torch.cuda.is_available() else 'cpu')
     return affine(rot)
 
 def shear(shear):
@@ -143,6 +154,7 @@ def shear(shear):
     rot = torch.tensor([[1, shear, 0],
                         [0, 1, 0],
                         ], dtype=torch.float32).unsqueeze(0)
+    rot = rot.to('cuda' if torch.cuda.is_available() else 'cpu')
     return affine(rot)
 
 def scale(scale):
@@ -150,6 +162,7 @@ def scale(scale):
     mat = torch.tensor([[1, 0, 0],
                         [0, 1, 0],
                         ], dtype=torch.float32).unsqueeze(0)/scale
+    mat = mat.to('cuda' if torch.cuda.is_available() else 'cpu')
     return affine(mat)
 
 class RandomAffineTfm():
