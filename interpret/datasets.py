@@ -2,14 +2,15 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 import pandas as pd
 import numpy as np
-from enum import Enum
+from enum import IntEnum
 from PIL import Image
 from pathlib import Path
 import math
 import matplotlib.pyplot as plt
 from .data import random_shapes
+from .plots import show_images
 
-class DataType(Enum):
+class DataType(IntEnum):
     Train = 1
     Valid = 2
     Test = 3
