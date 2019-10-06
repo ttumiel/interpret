@@ -87,7 +87,6 @@ class DiabeticRetData(Dataset):
         labels = {0: "None", 1: "Mild", 2: "Moderate", 3: "Severe", 4: "Proliferative"}
         return labels[lb]
 
-
 class RandomShape(Dataset):
     """
     Create a dataset of procedurally generated shapes.
@@ -95,19 +94,31 @@ class RandomShape(Dataset):
     size - Size of the images.
     ds_length - length of the dataset.
     tfms - apply transforms to the dataset images.
+    background - on of {'uniform', 'random', 'color'}
+    number - The number of shapes in the image. If
+             'random' then chosen between 1-number.
+    random - Whether to choose a random number of images.
+    weight - Weight the probability of seeing different classes.
+             Normalized to sum to 1.
     """
-    def __init__(self, size, ds_length, tfms=None):
+    def __init__(self, size, ds_length, tfms=None, background='uniform', number=1, random=False, weight=None):
         self.size = size
         self.l = ds_length
         self.tfms = tfms
+        self.bg = background
+        self.num = number
+        self.random = random
+        self.probs = None if weight is None else np.array(weight)/np.array(weight).sum()
 
     def __len__(self):
         return self.l
 
     def __getitem__(self, _):
-        s = random_shapes(self.size, shape=None, min_size=self.size/3, max_size=self.size,
-                             coord_limits=None, background='uniform', number=1)
-        return self.tfms(s[0]),s[1] if self.tfms is not None else s
+        im_number = np.random.randint(1,self.num) if self.random else self.num
+        shape_choice = self.probs if self.probs is None else np.random.choice(['rectangle', 'circle', 'triangle'], p=self.probs)
+        s = random_shapes(self.size, shape=shape_choice, min_size=self.size/3, max_size=self.size,
+                             coord_limits=None, background=self.bg, number=im_number)
+        return (self.tfms(s[0]),s[1]) if self.tfms is not None else s
 
     @staticmethod
     def decode_label(i):
