@@ -35,14 +35,22 @@ def norm(im, mean=imagenet_stats[0], std=imagenet_stats[1]):
     im.requires_grad_(True)
     return im
 
-def get_layer_names(m, upper_name=''):
+def get_layer_names(m, upper_name='', _title=True):
     "Recursively show a network's named layers"
     name = ''
+    if _title:
+        print("{:^30} | {:^18} | {:^10} | {:^10}".format("Layer", "Class Name", "Input Size", "Output Size"))
+        print(f"{'-'*30} | {'-'*18} | {'-'*10} | {'-'*10}")
+
     if type(m) == tuple:
         name, m = m
 
     if hasattr(m, 'named_children') and len(list(m.named_children()))!=0:
         for layer in m.named_children():
-            get_layer_names(layer, upper_name=upper_name+name+"/" if name != '' else upper_name)
+            get_layer_names(layer, upper_name=upper_name+name+"/" if name != '' else upper_name, _title=False)
     else:
-        print(upper_name+name)
+        print("{:^30} | {:^18} | {:^10} | {:^10}".format(
+                upper_name+name,
+                m.__class__.__name__,
+                m.weight.size(1) if hasattr(m, 'weight') and len(m.weight.shape)>1 else '-',
+                m.weight.size(0) if hasattr(m, 'weight') else '-'))
