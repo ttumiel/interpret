@@ -25,8 +25,9 @@ class DiabeticRetData(Dataset):
     tfms - Transforms to apply to each image.
     seed - seed the rng for train-test split.
     """
-    def __init__(self, data_type, path=Path('data'), tfms=None, seed=None):
+    def __init__(self, data_type, path=Path('data'), folder=Path('images'), tfms=None, seed=None, regres=False):
         self.df = pd.read_csv(path/'train.csv')
+        self.c = len(self.df.diagnosis.unique())
 
         # Split data into train validation and test sets
         np.random.seed(seed)
@@ -39,7 +40,9 @@ class DiabeticRetData(Dataset):
 
         self.data_type = data_type
         self.path = path
+        self.folder = folder
         self.tfms = tfms
+        self.regres = regres
 
         if self.data_type == DataType.Train:
             self.idxs = train_idxs
@@ -53,15 +56,17 @@ class DiabeticRetData(Dataset):
     def __getitem__(self, idx):
         i = self.idxs[idx]
         filename, label = self.df.iloc[i]
-        img = Image.open(self.path/"images"/(filename+".png"))
+        img = Image.open(self.path/self.folder/(filename+".png"))
         if self.tfms is not None:
-            img = self.tfms(img)
-        return img, label
+            # img = self.tfms(image=np.asarray(img))['image'] # albumentations
+            img = self.tfms(img) # torchvision
+        return img, torch.tensor(label, dtype=torch.float32) if self.regres else label
 
     def __len__(self):
         return len(self.idxs)
 
     def show(self, num=9, figsize=(8,8), random=False):
+        if self.tfms is None:
         r = math.ceil(math.sqrt(num))
         axes = plt.subplots(r,r,figsize=figsize)[1].flatten()
         for i,ax in enumerate(axes):
@@ -72,6 +77,10 @@ class DiabeticRetData(Dataset):
                 ax.imshow(im)
                 ax.set_title(f'{label}')
             ax.set_axis_off()
+        else:
+            ims, lbs = zip(*[self[np.random.randint(len(self))] if random else self[i] for i in range(num)])
+            batch = torch.stack(ims)
+            show_images(batch, normalize=True, figsize=figsize, labels=lbs)
 
     @staticmethod
     def decode_label(lb):
