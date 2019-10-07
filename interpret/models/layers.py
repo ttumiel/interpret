@@ -99,12 +99,11 @@ class Learner():
         self.wd = wd
         self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
         self.losses = []
-        self.accs = []
         self.val_losses = []
         self.metrics = metrics
         self.metric_values = [[] for _ in range(len(self.metrics))]
 
-    def fit(self, epochs, lr):
+    def fit(self, epochs, lr, callbacks=[]):
         self.model.train()
         self.model.to(self.device)
 
@@ -124,24 +123,43 @@ class Learner():
             table_names += ['val loss'] + [m.__name__ for m in self.metrics]
         table = pd.DataFrame(columns=table_names + ['time'])
 
+        # On train begin
+        for cb in callbacks:
+            cb.on_train_begin()
+
         for epoch in range(epochs):
             self.model.train()
+
+            # On epoch begin
+            for cb in callbacks:
+                cb.on_epoch_begin()
+
             start_time = time.time()
             pbar = tqdm(self.data, leave=False)
             for x,y in pbar:
+                # On batch begin
+                for cb in callbacks:
+                    cb.on_batch_begin()
+
                 x,y = x.to(self.device),y.to(self.device)
 
+                # Forward Pass
                 preds = self.model(x)
                 loss = crit(preds, y)
-                self.accs.append(accuracy(preds, y))
                 self.losses.append(loss.item())
 
+                # Backward pass
                 loss.backward()
-                optim.step()
-                optim.zero_grad()
+                self.optim.step()
+                self.optim.zero_grad()
 
                 pbar.set_description_str(f"{round(self.losses[-1], 2)} ")
 
+                # On batch end
+                for cb in callbacks:
+                    cb.on_batch_end()
+
+            # Validation
             if self.val_data is not None:
                 # with torch.no_grad():??
                 self.model.eval()
@@ -180,6 +198,14 @@ class Learner():
 
             clear_output()
             display(table)
+
+            # On epoch end
+            for cb in callbacks:
+                cb.on_epoch_end()
+
+        # On train end
+        for cb in callbacks:
+            cb.on_train_end()
         all_preds = []
         if data is None:
             for x,y in self.data:
