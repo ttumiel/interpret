@@ -106,7 +106,17 @@ class Learner():
     def fit(self, epochs, lr):
         self.model.train()
         self.model.to(self.device)
-        optim = self.optim_fn(self.model.parameters(), lr=lr, weight_decay=self.wd)
+
+        # Differential learning rates
+        if isinstance(lr, float):
+            self.optim = self.optim_fn(self.model.parameters(), lr=lr, weight_decay=self.wd)
+        elif isinstance(lr, (list,tuple)):
+            assert len(lr) == len(self.model), "lr should have same len() as model"
+            p = [{'params': m.parameters(), 'lr': l} for m,l in zip(self.model, lr)]
+            self.optim = self.optim_fn(p, weight_decay=self.wd)
+        else:
+            raise(TypeError("lr should be one of {list, tuple, float}"))
+
         crit = self.loss_fn()
 
         for epoch in range(epochs):
