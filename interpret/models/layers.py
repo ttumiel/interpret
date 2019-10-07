@@ -118,8 +118,13 @@ class Learner():
             raise(TypeError("lr should be one of {list, tuple, float}"))
 
         crit = self.loss_fn()
+        table_names = ['train loss']
+        if self.val_data is not None:
+            table_names += ['val loss'] + [m.__name__ for m in self.metrics]
+        table = pd.DataFrame(columns=table_names + ['time'])
 
         for epoch in range(epochs):
+            self.model.train()
             start_time = time.time()
             pbar = tqdm(self.data, leave=False)
             for x,y in pbar:
@@ -134,10 +139,14 @@ class Learner():
                 optim.step()
                 optim.zero_grad()
 
-                pbar.set_description_str(f"{round(self.losses[-1], 2)} {round(self.accs[-1], 3)} ")
+                pbar.set_description_str(f"{round(self.losses[-1], 2)} ")
 
             if self.val_data is not None:
+                # with torch.no_grad():??
+                self.model.eval()
                 pbar = tqdm(self.val_data, leave=False)
+                val_loss_tmp = []
+                metric_tmps = [[] for _ in range(len(self.metrics))]
                 for x,y in pbar:
                     x,y = x.to(self.device),y.to(self.device)
 
@@ -149,19 +158,20 @@ class Learner():
 
             end_time = time.time()
             t = end_time-start_time
-            trn_loss = round(np.mean(self.losses[-len(self.data):]),3)
-            trn_acc = round(np.mean(self.accs[-len(self.data):]), 3)
-            msg = "{:3} | train loss: {:5} | train {}: {:5}".format(epoch, trn_loss, accuracy.__name__, trn_acc)
+            trn_loss = round(np.mean(self.losses[-len(self.data):]),5)
+            table_data = [trn_loss]
+
             if self.val_data is not None:
-                val_loss = round(np.mean(self.val_losses[-len(self.val_data):]),3)
-                val_acc = round(np.mean(self.val_accs[-len(self.val_data):]), 3)
-                msg += " | val loss: {:5} | val {}: {:5}".format(val_loss, accuracy.__name__, val_acc)
-            msg += " | {:2}:{:2}".format(round(t//3600), round(t%3600/60))
+                val_loss = self.val_losses[-1]
+                table_data += [val_loss]
+                for metr_val in self.metric_values:
+                    table_data.append(metr_val[-1])
 
-            pbar.write(msg)
+            time_msg = "{:2}:{:02}".format(round(t//60), round(t%60))
+            table.loc[epoch] = table_data + [time_msg]
 
-    def predict(self, data=None, test=True):
-        if test: self.model.eval()
+            clear_output()
+            display(table)
         all_preds = []
         if data is None:
             for x,y in self.data:
