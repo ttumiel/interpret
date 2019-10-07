@@ -83,7 +83,7 @@ class Flatten(nn.Module):
 
 class Learner():
     "A class holding a network that can train and predict on a dataset."
-    def __init__(self, data, model, val_data=None, optim=torch.optim.Adam, loss_fn=nn.CrossEntropyLoss, wd=1e-5):
+    def __init__(self, data, model, val_data=None, metrics=[], optim=torch.optim.Adam, loss_fn=nn.CrossEntropyLoss, wd=1e-5):
         if isinstance(data, torch.utils.data.DataLoader):
             self.data = data
         else:
@@ -101,7 +101,8 @@ class Learner():
         self.losses = []
         self.accs = []
         self.val_losses = []
-        self.val_accs = []
+        self.metrics = metrics
+        self.metric_values = [[] for _ in range(len(self.metrics))]
 
     def fit(self, epochs, lr):
         self.model.train()
@@ -152,9 +153,16 @@ class Learner():
 
                     preds = self.model(x)
                     loss = crit(preds, y)
-                    # TODO: val_* should be averages at the end of every epoch
-                    self.val_accs.append(accuracy(preds, y))
-                    self.val_losses.append(loss.item())
+
+                    val_loss_tmp.append(loss.item())
+
+                    # Run metrics
+                    for i,m in enumerate(self.metrics):
+                        metric_tmps[i].append(m(preds, y))
+
+                self.val_losses.append(round(np.mean(val_loss_tmp), 5))
+                for i,m in enumerate(self.metrics):
+                    self.metric_values[i].append(round(np.mean(metric_tmps[i]), 5))
 
             end_time = time.time()
             t = end_time-start_time
