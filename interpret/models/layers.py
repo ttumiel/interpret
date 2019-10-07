@@ -251,3 +251,13 @@ class Learner():
 
     def __repr__(self):
         return self.model.__repr__()
+
+    def freeze(self, bn=False):
+        freeze(self.model, bn=bn)
+
+    def unfreeze(self):
+        unfreeze(self.model)
+
+    def fit_one_cycle(self, epochs, lr, callbacks=[]):
+        cb = [OneCycleSchedule(self, lr)] + callbacks
+        self.fit(epochs, lr, callbacks=cb)
