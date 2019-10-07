@@ -7,7 +7,7 @@ from tqdm import tqdm
 from collections import OrderedDict
 import time
 
-from ..plots import plot
+from .callback import OneCycleSchedule
 
 def accuracy(y_hat, y):
     return (y_hat.argmax(-1) == y).float().mean().item()
