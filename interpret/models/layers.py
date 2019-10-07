@@ -2,17 +2,22 @@ import torch
 from torch import nn
 from scipy.signal import medfilt
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
-from tqdm import tqdm
+from tqdm import tqdm_notebook as tqdm
 from collections import OrderedDict
 import time
+from IPython.display import display, clear_output
 
+from ..plots import plot, show_images
+from ..core import freeze, unfreeze
+from ..datasets import DataType
 from .callback import OneCycleSchedule
 
 def accuracy(y_hat, y):
     return (y_hat.argmax(-1) == y).float().mean().item()
 
-def init_head(m):
+def init(m):
     if isinstance(m, (nn.BatchNorm2d, nn.BatchNorm1d, nn.BatchNorm3d)):
         nn.init.constant_(m.weight.data, 1)
         nn.init.constant_(m.bias.data, 0)
@@ -51,7 +56,7 @@ def create_head(ni, nf, pool=True):
         nn.Dropout(p=0.5),
         nn.Linear(512, nf)
     ]
-    return nn.Sequential(*layers).apply(init_head)
+    return nn.Sequential(*layers).apply(init)
 
 def cut_arch(m, cut=-1):
     body = OrderedDict(list(m.named_children())[:cut])
