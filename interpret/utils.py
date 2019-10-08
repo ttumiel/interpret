@@ -25,14 +25,15 @@ def denorm(im, mean=imagenet_stats[0], std=imagenet_stats[1], image=True):
     return Image.fromarray(im)
 
 
-def norm(im, mean=imagenet_stats[0], std=imagenet_stats[1]):
+def norm(im, input_range=(0,255), mean=imagenet_stats[0], std=imagenet_stats[1], unsqueeze=True, grad=True):
     "Normalize an image"
-    mean, std = torch.tensor(mean), torch.tensor(std)
-    im /= 255
-    im -= mean[..., None, None]
-    im /= std[..., None, None]
-    im.unsqueeze_(0)
-    im.requires_grad_(True)
+    mean, std = torch.tensor(mean, device=im.device), torch.tensor(std, device=im.device)
+    im = im + input_range[0]
+    im = im / input_range[1]
+    im = im - mean[..., None, None]
+    im = im / std[..., None, None]
+    if unsqueeze: im.unsqueeze_(0)
+    if grad: im.requires_grad_(True)
     return im
 
 def get_layer_names(m, upper_name='', _title=True):
