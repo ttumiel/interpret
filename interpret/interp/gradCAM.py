@@ -26,3 +26,27 @@ def gradcam(model, img, im_class, layer=0, heatmap_thresh=16, image=True, show_i
             if show_im: ax.imshow(xb_im)
             ax.imshow(mult, alpha=0.4, extent=(0,*sz[::-1],0), interpolation='bilinear', cmap='magma')
         return mult
+
+def gradcam_from_examples(learn, n_examples, layer, figsize=(10,10)):
+    c = learn.data.dataset.c
+    ax = plt.subplots(n_examples,c+1,figsize=figsize)[1]
+    for row in range(n_examples):
+        img, label = learn.val_data.dataset[np.random.randint(len(learn.val_data.dataset))]
+        img = img.to(learn.device)
+        ax[row][0].imshow(denorm(img))
+        if c>1:
+            pred = learn.predict((img[None], label))[0].argmax(1)
+        else:
+            pred = learn.predict((img[None], label))[0].round()
+        pred = learn.val_data.dataset.decode_label(pred.item())
+        label = learn.val_data.dataset.decode_label(label.item())
+        ax[row][0].set_title(f"Input Image.\nPrediction: {pred}.\nLabel: {label}.")
+        for class_label in range(c):
+            gradcam(learn.model, img[None], class_label, layer=layer, show_im=False, ax=ax[row][class_label+1])
+            if c > 1:
+                ax[0][class_label+1].set_title(f"Looking for: {learn.val_data.dataset.decode_label(class_label)}")
+            else:
+                ax[0][class_label+1].set_title(f"Prediction")
+    ax=ax.flatten()
+    for i in range(len(ax)):
+        ax[i].set_axis_off()
