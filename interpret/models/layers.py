@@ -252,6 +252,44 @@ class Learner():
     def __repr__(self):
         return self.model.__repr__()
 
+    def top_losses(self, n=9, force=False):
+        # Reuse existing calculations if they exist
+        if hasattr(self, '_top_losses_saved') and not force:
+            return self._top_losses_saved
+
+        self.model.eval()
+        self.model.to(self.device)
+        all_preds = []
+        all_ys = []
+        all_losses = []
+
+        crit = self.loss_fn()
+        single_item_dl = torch.utils.data.DataLoader(self.val_data.dataset, batch_size=1)
+        for x,y in tqdm(single_item_dl, leave=False):
+            x,y = x.to(self.device),y.to(self.device)
+            preds = self.model(x)
+            all_preds.append(preds.detach().cpu())
+            all_ys.append(y.detach().cpu())
+            all_losses.append(crit(preds, y).detach().cpu())
+
+        ps,ys,ls = torch.cat(all_preds), torch.cat(all_ys), torch.stack(all_losses)
+        del single_item_dl, all_preds, all_ys, all_losses
+
+        idxs = torch.argsort(ls, descending=True)
+        ps = ps.argmax(1)[idxs]
+        ys = ys[idxs]
+        ls = ls[idxs]
+        self._top_losses_saved = ps, ys, ls, idxs
+        return ps, ys, ls, idxs
+
+    def plot_top_losses(self, n=9, figsize=(10,10)):
+        ps, ys, ls, idxs = self.top_losses()
+
+        ims = torch.stack([self.val_data.dataset[i][0] for i in idxs[:n]])
+        labels = [f"{ps[i]}/{ys[i]}" for i in range(n)]
+
+        show_images(ims, normalize=True, figsize=figsize, labels=labels, title="Top Losses: predicted/actual")
+
     def confusion_matrix(self):
         from sklearn.metrics import confusion_matrix as get_cm
 
