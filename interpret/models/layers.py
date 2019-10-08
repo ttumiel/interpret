@@ -252,6 +252,58 @@ class Learner():
     def __repr__(self):
         return self.model.__repr__()
 
+    def confusion_matrix(self):
+        from sklearn.metrics import confusion_matrix as get_cm
+
+        # TODO: Use the predict method instead of repeating code!
+        self.model.to(self.device)
+        self.model.eval()
+        c = self.data.dataset.c
+        cm = np.zeros((c, c))
+        for x,y in tqdm(self.val_data, leave=False):
+            x,y = x.to(self.device),y.to(self.device)
+            preds = self.model(x)
+            cm += get_cm(y.detach().cpu().numpy(),
+                                preds.argmax(1).detach().cpu().numpy(),
+                                labels=np.arange(c))
+        return cm
+
+    def plot_confusion_matrix(self):
+        cm = self.confusion_matrix().astype('int')
+
+        c = self.data.dataset.c
+        ticks = np.arange(c)
+        classes = [self.data.dataset.decode_label(i) for i in ticks]
+        title = "Confusion Matrix"
+
+        fig, ax = plt.subplots(figsize=(7,6))
+        im = ax.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
+    #     ax.figure.colorbar(im, ax=ax)
+
+        ax.set(
+            xticks=ticks,
+            yticks=ticks,
+            xticklabels=classes,
+            yticklabels=classes,
+            xlim=(-0.5,c-0.5),
+            ylim=(c-0.5,-0.5),
+            ylabel='True Label',
+            xlabel='Predicted Label')
+
+        plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
+                rotation_mode="anchor")
+
+        fmt= 'd'
+        thresh = cm.max() / 2.
+        for i in range(cm.shape[0]):
+            for j in range(cm.shape[1]):
+                ax.text(j, i, format(cm[i, j], fmt),
+                        ha="center", va="center",
+                        color="white" if cm[i, j] > thresh else "black")
+        fig.tight_layout()
+
+        return ax
+
     def freeze(self, bn=False):
         freeze(self.model, bn=bn)
 
