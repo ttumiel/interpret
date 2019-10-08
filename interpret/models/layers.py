@@ -232,16 +232,16 @@ class Learner():
             return torch.cat(all_preds)
 
     def plot(self, figsize=(10,4), smooth=True):
-        f,ax = plt.subplots(1,2, figsize=figsize)
-        losses, accs = self.losses, self.accs
-        if smooth: losses, accs = medfilt(self.losses, 5), medfilt(self.accs, 5)
-        plot(losses, title="Loss", ax=ax[0], x_lb='Batches')
-        plot(accs, title="Accuracy", ax=ax[1], x_lb='Batches')
+        f,ax = plt.subplots(1,1+len(self.metrics), figsize=figsize)
+        losses = self.losses
+        val_mean = np.array(self.val_losses).mean()
+        v_losses = [v if v < 2*val_mean else val_mean for v in self.val_losses]
+        plot(losses, title="Loss", ax=ax[0], x_lb='Batches', label='train')
         if self.val_data is not None:
-            # TODO: Add legend
-            plot(self.val_losses, title="Loss", ax=ax[0], x_lb='Batches')
-            plot(self.val_accs, title="Accuracy", ax=ax[1], x_lb='Batches')
-
+            val_x_range = [x*len(self.data) for x in range(1, len(self.val_losses)+1)]
+            plot(v_losses, x=val_x_range, title="Loss", ax=ax[0], x_lb='Batches', label='valid')
+            for i,m in enumerate(self.metrics):
+                plot(self.metric_values[i], x=val_x_range, title=f"Validation {m.__name__}", ax=ax[1], x_lb='Batches')
 
     def save(self, fn):
         torch.save(self.model.state_dict(), fn)
