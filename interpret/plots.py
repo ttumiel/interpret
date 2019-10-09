@@ -10,10 +10,11 @@ def show_image(tensor, normalize=False, ax=None, **kwargs):
     img = denorm(tensor, **kwargs) if normalize else np.array(tensor.clone())
     plt.imshow(img) if ax is None else ax.imshow(img)
 
-def show_images(batched_tensor, normalize=False, figsize=(5,5), axis=False, labels=None, **kwargs):
+def show_images(batched_tensor, normalize=False, figsize=(5,5), axis=False, labels=None, title=None, **kwargs):
     r = math.ceil(math.sqrt(batched_tensor.size(0)))
-    axes = plt.subplots(r,r,figsize=figsize)[1].flatten()
-    for i,ax in enumerate(axes):
+    f,axes = plt.subplots(r,r,figsize=figsize)
+    if title is not None: f.suptitle(title)
+    for i,ax in enumerate(axes.flatten()):
         if i<batched_tensor.size(0):
             show_image(batched_tensor[i],normalize,ax, **kwargs)
             if labels is not None: ax.set_title(f'{labels[i]}')
