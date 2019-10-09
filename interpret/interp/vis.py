@@ -1,15 +1,16 @@
 "Visualise models"
 
-from ..hooks import Hook
+import numpy as np
 import torch
-from .. import core
+import torchvision
 from PIL import Image
+from IPython.display import display
+
+from ..hooks import Hook
+from ..core import *
 from ..imagenet import imagenet_stats, imagenet_labels
 from ..utils import *
-from IPython.display import display
-import torchvision
 from ..transforms import *
-import numpy as np
 from ..utils import denorm
 from .param import *
 
