@@ -34,25 +34,6 @@ class OptVis():
         self.shortcut = shortcut
         print(f"Optimising for {objective}")
         self.model.eval()
-        for p in self.model.parameters():
-            p.requires_grad_(False)
-
-    def __call__(self, x):
-        def activation_fn(module, input, output):
-            if self.neuron is None:
-                self.loss = -torch.mean(output[:, self.channel])
-            else:
-                if isinstance(module, nn.Conv2d):
-                    self.loss = -torch.mean(output[:, self.channel, self.neuron])
-            self.active = True
-
-        with Hook(self.model[self.layer], activation_fn, detach=False):
-            for i, m in enumerate(self.model.children()):
-                x = m(x)
-                if self.active:
-                    self.active = False
-                    break
-        return x
 
     def vis(self, img_param, thresh=(500,), transform=True, lr=0.05, wd=0., verbose=True):
         """
