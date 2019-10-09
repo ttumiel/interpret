@@ -110,6 +110,11 @@ class LayerObjective(Objective):
         if self.shortcut:
             self.active = False
 
+        try:
+            self.model[layer]
+        except:
+            raise ValueError(f"Can't find layer {layer}. Use 'get_layer_names' to print all layer names.")
+
     # Feels belaboured? Change to separate classes for channel, layer, neuron
     def __call__(self, x):
         def layer_hook(module, input, output):
