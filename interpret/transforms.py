@@ -34,12 +34,14 @@ class GaussianBlur():
     Sigma >> 1 will create an almost uniform kernel, while
     sigma << 1 will create a very focused kernel (less blurring).
     """
-    def __init__(self, channels, kernel_size, sigma, dim=2):
+    def __init__(self, channels, kernel_size, sigma, dim=2, device='cuda' if torch.cuda.is_available() else 'cpu'):
         self.channels, self.kernel_size, self.sigma = channels, kernel_size, sigma
         self.get_kernel(self.channels, self.kernel_size, self.sigma, dim=2)
         self.conv = nn.Conv2d(channels, channels, kernel_size, groups=channels, bias=False, padding=kernel_size//2)
         self.conv.weight.data = self.kernel
         self.conv.weight.requires_grad_(False)
+        self.conv.to(device)
+        self.device = device
 
     def get_kernel(self, channels, kernel_size, sigma, dim=2):
         kernel = 1
@@ -74,6 +76,7 @@ class ReducingGaussianBlur(GaussianBlur):
         self.get_kernel(self.channels, self.kernel_size, self.sigma)
         self.conv.weight.data = self.kernel
         self.conv.weight.requires_grad_(False)
+        self.conv.to(self.device)
         return super().__call__(x)
 
 def get_transforms(size, mean=imagenet_stats[0], std=imagenet_stats[1], rotate=10,
@@ -104,24 +107,25 @@ def get_transforms(size, mean=imagenet_stats[0], std=imagenet_stats[1], rotate=1
     if flip_vert: tfms += [transforms.RandomVerticalFlip()]
     if perspective: tfms += [transforms.RandomPerspective()]
 
-    brightness, contrast, saturation, hue = 0.25, 0.25, 0.25, 0
-    if color_jitter: tfms += [transforms.ColorJitter(brightness,contrast,saturation,hue)]
+    if isinstance(color_jitter, tuple):
+        brightness, contrast, saturation, hue = color_jitter
+        if color_jitter: tfms += [transforms.ColorJitter(brightness,contrast,saturation,hue)]
+    elif color_jitter:
+        brightness, contrast, saturation, hue = 0.25, 0.25, 0.25, 0
+        if color_jitter: tfms += [transforms.ColorJitter(brightness,contrast,saturation,hue)]
     tfms += [
         transforms.ToTensor(),
         transforms.Normalize(mean, std)
     ]
     return transforms.Compose(tfms)
 
-def no_transforms(size, mean=imagenet_stats[0], std=imagenet_stats[1]):
+def resize_norm_transform(size, mean=imagenet_stats[0], std=imagenet_stats[1]):
     "Return a list of transforms that only resizes and normalizes data."
     return transforms.Compose([
         transforms.Resize((size, size)),
         transforms.ToTensor(),
         transforms.Normalize(mean, std)
     ])
-
-# def denorm(img):
-#     return img.add(1).div(2).mul(255).clamp(0,255).permute(1,2,0).cpu().numpy().astype('uint8')
 
 def affine(mat):
     "applies an affine transform"
