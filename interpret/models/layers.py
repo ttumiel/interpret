@@ -252,7 +252,7 @@ class Learner():
     def __repr__(self):
         return self.model.__repr__()
 
-    def top_losses(self, n=9, force=False):
+    def top_losses(self, force=False):
         # Reuse existing calculations if they exist
         if hasattr(self, '_top_losses_saved') and not force:
             return self._top_losses_saved
@@ -276,19 +276,31 @@ class Learner():
         del single_item_dl, all_preds, all_ys, all_losses
 
         idxs = torch.argsort(ls, descending=True)
+        probs = torch.softmax(ps, dim=1)[np.arange(ps.size(0)), ys][idxs]
         ps = ps.argmax(1)[idxs]
         ys = ys[idxs]
         ls = ls[idxs]
-        self._top_losses_saved = ps, ys, ls, idxs
-        return ps, ys, ls, idxs
+        self._top_losses_saved = ps, ys, ls, probs, idxs
+        return ps, ys, ls, probs, idxs
 
-    def plot_top_losses(self, n=9, figsize=(10,10)):
-        ps, ys, ls, idxs = self.top_losses()
+    def plot_top_losses(self, n=9, figsize=(10,10), force=False, gradcam=False, **kwargs):
+        ps, ys, ls, probs, idxs = self.top_losses(force)
 
-        ims = torch.stack([self.val_data.dataset[i][0] for i in idxs[:n]])
-        labels = [f"{ps[i]}/{ys[i]}" for i in range(n)]
+        ims = torch.stack([self.val_data.dataset[i.item()][0] for i in idxs[:n]])
+        labels = ["{}/{:d}\n{:.2f}/{:.2f}".format(ps[i], ys[i], ls[i].item(), probs[i].item()) for i in range(n)]
 
-        show_images(ims, normalize=True, figsize=figsize, labels=labels, title="Top Losses: predicted/actual")
+        # Can't use show_images because we have to add heatmap
+        if gradcam:
+            r = math.ceil(math.sqrt(n))
+            f,axes = plt.subplots(r,r,figsize=figsize)
+            f.suptitle("Top Losses\npredicted/actual\nloss/probability", weight='bold')
+            for i,ax in enumerate(axes.flatten()):
+                if i<n:
+                    heatmap = _gradcam(self.model, ims[i][None].to(self.device), ps[i], show_im=True, ax=ax, **kwargs)
+                    ax.set_title(labels[i])
+                ax.set_axis_off()
+        else:
+            show_images(ims, normalize=True, figsize=figsize, labels=labels, title="Top Losses\npredicted/actual\nloss/probability")
 
     def confusion_matrix(self):
         from sklearn.metrics import confusion_matrix as get_cm
