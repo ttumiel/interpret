@@ -1,11 +1,14 @@
 import torch.nn.functional as F
+import matplotlib.pyplot as plt
+import numpy as np
+from PIL import Image
+
 from ..hooks import *
 from .. import core
-from PIL import Image
 from ..utils import denorm
-import matplotlib.pyplot as plt
 
-def gradcam(model, img, im_class, layer=0, heatmap_thresh=16, image=True, show_im=True, ax=None):
+def gradcam(model, img, im_class, layer=0, heatmap_thresh=16, image=True,
+            show_im=True, ax=None, colorbar=False, cmap='magma', alpha=0.4):
     m = model.eval()
     cl = int(im_class)
     xb = img
@@ -23,8 +26,11 @@ def gradcam(model, img, im_class, layer=0, heatmap_thresh=16, image=True, show_i
             xb_im = Image.fromarray(denorm(xb[0], image=False))
             if ax is None: _,ax = plt.subplots()
             sz = list(xb_im.size)
-            if show_im: ax.imshow(xb_im)
-            ax.imshow(mult, alpha=0.4, extent=(0,*sz[::-1],0), interpolation='bilinear', cmap='magma')
+            if show_im:
+                ax.imshow(xb_im)
+            im = ax.imshow(mult, alpha=alpha, extent=(0,*sz[::-1],0), interpolation='bilinear', cmap=cmap)
+            if colorbar:
+                ax.figure.colorbar(im, ax=ax)
         return mult
 
 def gradcam_from_examples(learn, n_examples, layer, figsize=(10,10)):
