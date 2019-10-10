@@ -302,26 +302,27 @@ class Learner():
         else:
             show_images(ims, normalize=True, figsize=figsize, labels=labels, title="Top Losses\npredicted/actual\nloss/probability")
 
-    def confusion_matrix(self):
+    def confusion_matrix(self, num_classes=None):
         from sklearn.metrics import confusion_matrix as get_cm
 
         # TODO: Use the predict method instead of repeating code!
         self.model.to(self.device)
         self.model.eval()
-        c = self.data.dataset.c
+        c = num_classes or self.data.dataset.c
         cm = np.zeros((c, c))
         for x,y in tqdm(self.val_data, leave=False):
             x,y = x.to(self.device),y.to(self.device)
             preds = self.model(x)
-            cm += get_cm(y.detach().cpu().numpy(),
-                                preds.argmax(1).detach().cpu().numpy(),
+            cm += get_cm(y.detach().cpu().numpy().round(),
+                                (preds.argmax(1).detach().cpu().numpy() if self.data.dataset.c > 1
+                                else preds.detach().cpu().round().squeeze().numpy()),
                                 labels=np.arange(c))
         return cm
 
-    def plot_confusion_matrix(self):
-        cm = self.confusion_matrix().astype('int')
+    def plot_confusion_matrix(self, num_classes=None):
+        cm = self.confusion_matrix(num_classes).astype('int')
 
-        c = self.data.dataset.c
+        c = num_classes or self.data.dataset.c
         ticks = np.arange(c)
         classes = [self.data.dataset.decode_label(i) for i in ticks]
         title = "Confusion Matrix"
