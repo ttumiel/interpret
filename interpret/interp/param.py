@@ -5,7 +5,7 @@ from torch.nn.parameter import Parameter
 from torch import nn
 from PIL import Image
 from torchvision.transforms import Resize
-from ..transforms import no_transforms
+from ..transforms import resize_norm_transform
 from ..utils import denorm, norm
 from ..imagenet import imagenet_stats
 
@@ -96,7 +96,7 @@ class ImageFile(nn.Module):
         super().__init__()
         self.decorrelate = decorrelate
         self.size = size
-        self.image = no_transforms(size)(Image.open(fn))[None]
+        self.image = resize_norm_transform(size)(Image.open(fn))[None]
         self.image_tensor = Parameter(self.image)
 
     def forward(self):
