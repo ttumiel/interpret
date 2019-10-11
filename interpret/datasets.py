@@ -25,9 +25,10 @@ class DiabeticRetData(Dataset):
     tfms - Transforms to apply to each image.
     seed - seed the rng for train-test split.
     """
-    def __init__(self, data_type, path=Path('data'), folder=Path('images'), tfms=None, seed=None, regres=False):
-        self.df = pd.read_csv(path/'train.csv')
-        self.c = len(self.df.diagnosis.unique())
+    def __init__(self, data_type, path=Path('data'), folder=Path('images'),
+            csv_name=Path('train.csv'), tfms=None, seed=None, regres=False):
+        self.df = pd.read_csv(path/csv_name)
+        self.c = len(self.df.diagnosis.unique()) if not regres else 1
 
         # Split data into train validation and test sets
         np.random.seed(seed)
@@ -67,16 +68,16 @@ class DiabeticRetData(Dataset):
 
     def show(self, num=9, figsize=(8,8), random=False):
         if self.tfms is None:
-        r = math.ceil(math.sqrt(num))
-        axes = plt.subplots(r,r,figsize=figsize)[1].flatten()
-        for i,ax in enumerate(axes):
-            if i<num:
-                im,label = self[np.random.randint(len(self))] if random else self[i]
-                if isinstance(im, torch.Tensor):
-                    im = denorm(im)
-                ax.imshow(im)
-                ax.set_title(f'{label}')
-            ax.set_axis_off()
+            r = math.ceil(math.sqrt(num))
+            axes = plt.subplots(r,r,figsize=figsize)[1].flatten()
+            for i,ax in enumerate(axes):
+                if i<num:
+                    im,label = self[np.random.randint(len(self))] if random else self[i]
+                    if isinstance(im, torch.Tensor):
+                        im = denorm(im)
+                    ax.imshow(im)
+                    ax.set_title(f'{self.decode_label(label)}')
+                ax.set_axis_off()
         else:
             ims, lbs = zip(*[self[np.random.randint(len(self))] if random else self[i] for i in range(num)])
             batch = torch.stack(ims)
