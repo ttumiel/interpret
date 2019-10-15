@@ -1,6 +1,10 @@
 # Interpretable Deep Learning
 
+![Class Visualisations](./class_vis.png)
+
 A simple to use PyTorch library for interpreting your deep learning results.
+
+**Note: Repo under construction**
 
 ## Installation
 
