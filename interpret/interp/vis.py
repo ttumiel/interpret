@@ -153,7 +153,7 @@ class LayerObjective(Objective):
             msg += f":{self.channel}"
         if self.neuron is not None:
             msg += f":{self.neuron}"
-        if self.channel is None and self.neuron is not None:
+        if self.channel is None and self.neuron is not None and self.model[self.layer].weight.size(0)==1000:
             msg += f"  {imagenet_labels[self.neuron]}"
         return msg
 
