@@ -4,7 +4,6 @@ import numpy as np
 import torch
 import torchvision
 from PIL import Image
-from IPython.display import display
 
 from ..hooks import Hook
 from ..core import *
@@ -44,6 +43,13 @@ class OptVis():
         through the network. The item to optimise must be a leaf node in order to
         be optimised.
         """
+        if verbose:
+            try:
+                from IPython.display import display
+            except ImportError:
+                raise ValueError("Can't use verbose if not in IPython notebook.")
+
+        freeze(self.model, bn=True)
         self.optim = self.optim_fn(img_param.parameters(), lr=lr, weight_decay=wd)
         for i in range(max(thresh)+1):
             img = img_param()
