@@ -211,25 +211,43 @@ class Learner():
         # On train end
         for cb in callbacks:
             cb.on_train_end()
+
+    def predict(self, data=None):
+        self.model.to(self.device)
+        self.model.eval()
         all_preds = []
+        all_ys = []
         if data is None:
             for x,y in self.data:
                 x,y = x.to(self.device),y.to(self.device)
                 preds = self.model(x)
-                all_preds.append(preds)
-            return torch.cat(all_preds)
-        else:
-            if isinstance(data, torch.utils.data.DataLoader):
-                for x,y in data:
-                    x,y = x.to(self.device),y.to(self.device)
-                    preds = self.model(x)
-                    all_preds.append(preds)
-            else:
-                x,y = data
+                all_preds.append(preds.detach().cpu())
+                all_ys.append(y.detach().cpu())
+        elif isinstance(data, torch.utils.data.DataLoader):
+            for x,y in tqdm(data, leave=False):
                 x,y = x.to(self.device),y.to(self.device)
                 preds = self.model(x)
-                all_preds.append(preds)
-            return torch.cat(all_preds)
+                all_preds.append(preds.detach().cpu())
+                all_ys.append(y.detach().cpu())
+        elif isinstance(data, DataType):
+            if data == DataType.Train:
+                all_preds, all_ys = self.predict()
+            elif data == DataType.Valid:
+                for x,y in self.val_data:
+                    x,y = x.to(self.device),y.to(self.device)
+                    preds = self.model(x)
+                    all_preds.append(preds.detach().cpu())
+                    all_ys.append(y.detach().cpu())
+            else:
+                raise ValueError(f"DataType {data} not found.")
+            else:
+                x,y = data
+            x = x.to(self.device)
+                preds = self.model(x)
+            all_preds.append(preds.detach().cpu())
+            y = torch.tensor(y).detach().cpu()
+            return torch.cat(all_preds), y
+        return torch.cat(all_preds), torch.cat(all_ys)
 
     def plot(self, figsize=(10,4), smooth=True):
         f,ax = plt.subplots(1,1+len(self.metrics), figsize=figsize)
