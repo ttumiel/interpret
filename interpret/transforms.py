@@ -6,7 +6,6 @@ from torch.nn.functional import affine_grid, grid_sample
 from torch.nn import functional as F
 from PIL import Image
 from .imagenet import imagenet_stats
-import albumentations as A
 
 class Blur():
     "Apply a uniform blur to an input with kernel_size"
