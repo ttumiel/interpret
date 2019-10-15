@@ -1,21 +1,21 @@
 import torch
 from torch import nn
-from scipy.signal import medfilt
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm_notebook as tqdm
 from collections import OrderedDict
-import time
+import time, math
 from IPython.display import display, clear_output
 
 from ..plots import plot, show_images
 from ..core import freeze, unfreeze
 from ..datasets import DataType
 from .callback import OneCycleSchedule
+from ..interp.gradCAM import gradcam as _gradcam
 
 def accuracy(y_hat, y):
-    return (y_hat.argmax(-1) == y).float().mean().item()
+    return (y_hat.argmax(1) == y).float().mean().item()
 
 def init(m):
     if isinstance(m, (nn.BatchNorm2d, nn.BatchNorm1d, nn.BatchNorm3d)):
