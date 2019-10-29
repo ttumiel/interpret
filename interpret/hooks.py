@@ -1,7 +1,11 @@
 import torch
 
 class Hook():
-    "Create a hook on `m` with `hook_func`."
+    """
+    Create a hook on `m` with `hook_func`.
+
+    Adapted from fastai: https://github.com/fastai/fastai/
+    """
     def __init__(self, m, hook_func, is_forward=True, detach=True, clone=False):
         self.hook_func = hook_func
         self.detach = detach
