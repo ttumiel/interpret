@@ -9,6 +9,25 @@ from ..utils import denorm
 
 def gradcam(model, img, im_class, layer=0, heatmap_thresh=16, image=True,
             show_im=True, ax=None, colorbar=False, cmap='magma', alpha=0.4):
+    """Generates a Grad-CAM attribution map for convolutional neural networks.
+
+    Parameters:
+    model: PyTorch model.
+    img (torch.Tensor): input tensor fed into the network for attribution.
+    im_class (int): the class that the network is attributing on.
+    layer (int): the layer the network is using for the attribution. See [1].
+    heatmap_thresh (int): prevents heatmaps from being created when the
+        feature map is less than 2x2 pixels.
+    image (bool): show the heatmap as an image
+    show_im (bool): show the denormalised input image overlaid on the heatmap.
+    ax: axes on which to plot image.
+    colorbar (bool): show a colorbar.
+    cmap: matplotlib colourmap.
+    alpha (float): transparency value alpha for heatmap.
+
+    Returns:
+    The Grad-CAM heatmap (torch.Tensor)
+    """
     m = model.eval()
     cl = int(im_class)
     xb = img
@@ -34,6 +53,7 @@ def gradcam(model, img, im_class, layer=0, heatmap_thresh=16, image=True,
         return mult
 
 def gradcam_from_examples(learn, n_examples, layer, figsize=(10,10), show_overlay=False, cmap='magma'):
+    "Utility method to generate a collage of attribution maps from a list of examples."
     c = learn.data.dataset.c
     ax = plt.subplots(n_examples,c + (2 if show_overlay else 1),figsize=figsize)[1]
     for row in range(n_examples):
