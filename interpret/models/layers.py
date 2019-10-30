@@ -166,26 +166,26 @@ class Learner():
 
             # Validation
             if self.val_data is not None:
-                # with torch.no_grad():??
-                self.model.eval()
-                pbar = tqdm(self.val_data, leave=False)
-                val_loss_tmp = []
-                metric_tmps = [[] for _ in range(len(self.metrics))]
-                for x,y in pbar:
-                    x,y = x.to(self.device),y.to(self.device)
+                with torch.no_grad():
+                    self.model.eval()
+                    pbar = tqdm(self.val_data, leave=False)
+                    val_loss_tmp = []
+                    metric_tmps = [[] for _ in range(len(self.metrics))]
+                    for x,y in pbar:
+                        x,y = x.to(self.device),y.to(self.device)
 
-                    preds = self.model(x)
-                    loss = crit(preds, y)
+                        preds = self.model(x)
+                        loss = crit(preds, y)
 
-                    val_loss_tmp.append(loss.item())
+                        val_loss_tmp.append(loss.item())
 
-                    # Run metrics
+                        # Run metrics
+                        for i,m in enumerate(self.metrics):
+                            metric_tmps[i].append(m(preds, y))
+
+                    self.val_losses.append(round(np.mean(val_loss_tmp), 5))
                     for i,m in enumerate(self.metrics):
-                        metric_tmps[i].append(m(preds, y))
-
-                self.val_losses.append(round(np.mean(val_loss_tmp), 5))
-                for i,m in enumerate(self.metrics):
-                    self.metric_values[i].append(round(np.mean(metric_tmps[i]), 5))
+                        self.metric_values[i].append(round(np.mean(metric_tmps[i]), 5))
 
             end_time = time.time()
             t = end_time-start_time
@@ -240,10 +240,10 @@ class Learner():
                     all_ys.append(y.detach().cpu())
             else:
                 raise ValueError(f"DataType {data} not found.")
-            else:
-                x,y = data
+        else:
+            x,y = data
             x = x.to(self.device)
-                preds = self.model(x)
+            preds = self.model(x)
             all_preds.append(preds.detach().cpu())
             y = torch.tensor(y).detach().cpu()
             return torch.cat(all_preds), y
@@ -294,7 +294,10 @@ class Learner():
         del single_item_dl, all_preds, all_ys, all_losses
 
         idxs = torch.argsort(ls, descending=True)
-        probs = torch.softmax(ps, dim=1)[np.arange(ps.size(0)), ys][idxs]
+        if self.data.dataset.c !=1:
+            probs = torch.softmax(ps, dim=1)[np.arange(ps.size(0)), ys][idxs]
+        else:
+            probs = torch.ones(ps.size(0))
         ps = ps.argmax(1)[idxs]
         ys = ys[idxs]
         ls = ls[idxs]
@@ -305,7 +308,7 @@ class Learner():
         ps, ys, ls, probs, idxs = self.top_losses(force)
 
         ims = torch.stack([self.val_data.dataset[i.item()][0] for i in idxs[:n]])
-        labels = ["{}/{:d}\n{:.2f}/{:.2f}".format(ps[i], ys[i], ls[i].item(), probs[i].item()) for i in range(n)]
+        labels = ["{}/{:d}\n{:.2f}/{:.2f}".format(ps[i], ys[i].to(torch.long), ls[i].item(), probs[i].item()) for i in range(n)]
 
         # Can't use show_images because we have to add heatmap
         if gradcam:
