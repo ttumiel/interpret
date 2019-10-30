@@ -47,7 +47,7 @@ def gradcam(model, img, im_class, layer=0, heatmap_thresh=16, image=True,
             sz = list(xb_im.size)
             if show_im:
                 ax.imshow(xb_im)
-            im = ax.imshow(mult, alpha=alpha, extent=(0,*sz[::-1],0), interpolation='bilinear', cmap=cmap)
+            im = ax.imshow(mult, alpha=alpha, extent=(0,*sz,0), interpolation='bilinear', cmap=cmap)
             if colorbar:
                 ax.figure.colorbar(im, ax=ax)
         return mult
