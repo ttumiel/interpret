@@ -21,9 +21,20 @@ VIS_TFMS = torchvision.transforms.Compose([
                 ], p=0.5)
 ])
 
-
 class OptVis():
-    "Class to visualise particular layers by optimisation"
+    """
+    Class to visualise particular layers by optimisation.
+
+    Parameters:
+    model (nn.Module): PyTorch model.
+    objective (Objective): The objective that the network will optimise.
+        See factory methods from_layer.
+    tfms (list): list of transformations to potentially apply to image.
+    optim (torch.optim): PyTorch optimisation function.
+    shortcut (bool): Attempt to shortten the computation by iterating through
+        the layers until the objective is reached as opposed to calling the
+        entire network. Only works on Sequential-like models.
+    """
 
     def __init__(self, model, objective, tfms=VIS_TFMS, optim=torch.optim.Adam, shortcut=False):
         self.model = model
@@ -37,11 +48,16 @@ class OptVis():
 
     def vis(self, img_param, thresh=(500,), transform=True, lr=0.05, wd=0., verbose=True):
         """
-        TODO: UPDATE
-        The `img_obj` object is a dictionary containing the item to optimise and the
-        item to display. The item to display must be a valid image which can be run
-        through the network. The item to optimise must be a leaf node in order to
-        be optimised.
+        Generate a visualisation by optimisation of an input. Updates img_param in-place.
+
+        Parameters:
+        img_param: object that parameterises the input noise.
+        thresh (tuple): thresholds at which to display the generated image.
+            Only displayed if verbose==True. Input optimised for max(thresh) iters.
+        transform (bool): Whether to transform the input image using self.tfms.
+        lr (float): learning rate for optimisation.
+        wd (float): weight decay for self.optim_fn.
+        verbose (bool): display input on thresholds.
         """
         if verbose:
             try:
@@ -81,8 +97,8 @@ class OptVis():
     @classmethod
     # layer and channel... How to make this extensible into layer,
     # channel and neuron?? Separate classes feels wasteful
-    def from_layer(cls, model, layer, neuron=None, shortcut=False, **kwargs):
-        channel = None
+    def from_layer(cls, model, layer, channel=None, neuron=None, shortcut=False, **kwargs):
+        "Factory method to create OptVis from a LayerObjective. See respective classes for docs."
         if ":" in layer:
             layer, channel = layer.split(":")
             channel = int(channel)
@@ -107,7 +123,7 @@ class Objective():
         return f"{self.name}"
 
 class LayerObjective(Objective):
-    def __init__(self, model, layer, channel, neuron=None, shortcut=False):
+    def __init__(self, model, layer, channel=None, neuron=None, shortcut=False):
         self.model = model
         self.layer = layer
         self.channel = channel
@@ -131,13 +147,13 @@ class LayerObjective(Objective):
                     self.loss = -torch.mean(output[:, self.channel])
             else:
                 if isinstance(module, nn.Conv2d):
-                    # Check if channel is None and handle
+                    # TODO: Check if channel is None and handle
                     self.loss = -torch.mean(output[:, self.channel, self.neuron])
                 elif isinstance(module, nn.Linear):
                     self.loss = -torch.mean(output[:, self.neuron])
             self.active = True
 
-        with Hook(self.model[self.layer], layer_hook, detach=False):
+        with Hook(self.model[self.layer], layer_hook, detach=False, clone=True):
             if self.shortcut:
                 for i, m in enumerate(self.model.children()):
                     x = m(x)
