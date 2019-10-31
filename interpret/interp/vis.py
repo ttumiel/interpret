@@ -14,11 +14,8 @@ from ..utils import denorm
 from .param import *
 
 VIS_TFMS = torchvision.transforms.Compose([
-    RandomEvery([
-                                        GaussianBlur(3, 3, 0.5),
-                                        RandomAffineTfm(rotate, 5),
-                    RandomAffineTfm(scale, [0.98, 1.05])
-                ], p=0.5)
+    RandomAffineTfm(scale, [0.9, 1.1]),
+    RandomAffineTfm(rotate, 10),
 ])
 
 class OptVis():
