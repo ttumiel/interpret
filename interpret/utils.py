@@ -30,7 +30,7 @@ def norm(im, input_range=(0,255), mean=imagenet_stats[0], std=imagenet_stats[1],
     "Normalize an image"
     if isinstance(im, Image.Image):
         im = torch.tensor(np.asarray(im)).permute(2,0,1).float()
-    elif isinstance(im, np.array):
+    elif isinstance(im, np.ndarray):
         im = torch.tensor(im).float()
         size = im.size()
         assert len(size)==3 or len(size)==4, "Image has wrong number of dimensions."
