@@ -2,13 +2,22 @@
 
 ![Class Visualisations](./class_vis.png)
 
-A simple to use PyTorch library for interpreting your deep learning results.
+A simple to use PyTorch library for interpreting your deep learning results. Inspired by [TensorFlow Lucid](https://github.com/ttumiel/interpret).
+
+[![Build Status](https://travis-ci.org/ttumiel/interpret.svg?branch=master)](https://travis-ci.org/ttumiel/interpret)
+[![Coverage Status](https://coveralls.io/repos/github/ttumiel/interpret/badge.svg?branch=master)](https://coveralls.io/github/ttumiel/interpret?branch=master)
 
 **Note: Repo under construction**
 
 ## Installation
 
-Currently, install from GitHub:
+Install from PyPI:
+
+```bash
+pip install interpret-pytorch
+```
+
+Or, install the latest code from GitHub:
 
 ```bash
 pip install git+https://github.com/ttumiel/interpret
