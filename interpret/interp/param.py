@@ -62,7 +62,18 @@ def random_im(size, sd=0.5, device='cuda' if torch.cuda.is_available() else 'cpu
     return im, lambda x: x
 
 class ImageParam(nn.Module):
-    "Factory class to create a parameterized image."
+    """Class to create a parameterized image.
+
+    Parameters:
+    size (int): size of image. Image will be square.
+    fft (bool): parameterise the image in the Fourier domain.
+    decorrelate (bool): decorrelate the colours of the image.
+    sigmoid (bool): apply signmoid after decorrelation to ensure
+        values are in range(0,1)
+    mean (list): means of the images used to train the network.
+    std (list): standard deviations of the images used to train the network.
+    kwargs: passed on to the image function fourier_image or random_im.
+    """
     def __init__(self, size, fft=True, decorrelate=True, sigmoid=True, mean=imagenet_stats[0], std=imagenet_stats[1], **kwargs):
         super().__init__()
         self.fft = fft
