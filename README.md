@@ -2,7 +2,7 @@
 
 ![Class Visualisations](./class_vis.png)
 
-A simple to use PyTorch library for interpreting your deep learning results. Inspired by [TensorFlow Lucid](https://github.com/ttumiel/interpret).
+A simple to use PyTorch library for interpreting your deep learning results. Inspired by [TensorFlow Lucid](https://github.com/tensorflow/lucid).
 
 [![Build Status](https://travis-ci.org/ttumiel/interpret.svg?branch=master)](https://travis-ci.org/ttumiel/interpret)
 [![Coverage Status](https://coveralls.io/repos/github/ttumiel/interpret/badge.svg?branch=master)](https://coveralls.io/github/ttumiel/interpret?branch=master)
