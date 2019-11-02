@@ -70,8 +70,8 @@ class OptVis():
             if transform:
                 img = self.tfms(img)
 
-            self.objective(img)
-            self.objective.loss.backward()
+            loss = self.objective(img)
+            loss.backward()
 
             # print(img_param.noise.grad.abs().max(), img_param.noise.grad.abs().mean(),img_param.noise.grad.std())
 
@@ -86,7 +86,7 @@ class OptVis():
             self.optim.zero_grad()
 
             if verbose and i in thresh:
-                print(i, self.objective.loss.item())
+                print(i, loss.item())
                 display(zoom(denorm(img), 2))
 
             # self.optim.param_groups[0]['params'][0] = img_obj['optimise']
