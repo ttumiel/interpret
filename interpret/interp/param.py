@@ -68,7 +68,7 @@ class ImageParam(nn.Module):
     size (int): size of image. Image will be square.
     fft (bool): parameterise the image in the Fourier domain.
     decorrelate (bool): decorrelate the colours of the image.
-    sigmoid (bool): apply signmoid after decorrelation to ensure
+    sigmoid (bool): apply sigmoid after decorrelation to ensure
         values are in range(0,1)
     mean (list): means of the images used to train the network.
     std (list): standard deviations of the images used to train the network.
@@ -104,11 +104,19 @@ class ImageParam(nn.Module):
         return f"{self.__class__.__name__}: {self.size}px, fft={self.fft}, decorrelate={self.decorrelate}"
 
 class ImageFile(nn.Module):
+    """Create a parameterised image from a local image.
+
+    Parameters:
+    fn (str): image filename.
+    size (int): size to resize image.
+    decorrelate (bool): apply colour decorrelation to the image.
+    kwargs: passed on to resize_norm_transform.
+    """
     def __init__(self, fn, size, decorrelate=False, **kwargs):
         super().__init__()
         self.decorrelate = decorrelate
         self.size = size
-        self.image = resize_norm_transform(size)(Image.open(fn))[None]
+        self.image = resize_norm_transform(size, **kwargs)(Image.open(fn))[None]
         self.image_tensor = Parameter(self.image)
 
     def forward(self):
@@ -120,4 +128,5 @@ class ImageFile(nn.Module):
         return im
 
     def _repr_html_(self):
-        return denorm(self.image)
+        from IPython.display import display
+        return display(denorm(self.image))
