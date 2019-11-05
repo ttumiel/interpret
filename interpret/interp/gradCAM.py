@@ -27,6 +27,10 @@ def gradcam(model, img, im_class, layer=0, heatmap_thresh=16, image=True,
 
     Returns:
     The Grad-CAM heatmap (torch.Tensor)
+
+    References:
+    [1] - Grad-CAM: Visual Explanations from Deep Networks via
+          Gradient-based Localization. https://arxiv.org/abs/1610.02391
     """
     m = model.eval()
     cl = int(im_class)

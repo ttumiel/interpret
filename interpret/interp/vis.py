@@ -19,7 +19,9 @@ VIS_TFMS = torchvision.transforms.Compose([
 
 class OptVis():
     """
-    Class to visualise particular layers by optimisation.
+    Class to visualise particular layers by optimisation. Visualisation
+    follows the procedure outlined by Olah et al. [1] and
+    implemented in Lucid [2].
 
     Parameters:
     model (nn.Module): PyTorch model.
@@ -27,9 +29,12 @@ class OptVis():
         See factory methods from_layer.
     tfms (list): list of transformations to potentially apply to image.
     optim (torch.optim): PyTorch optimisation function.
-    shortcut (bool): Attempt to shortten the computation by iterating through
+    shortcut (bool): Attempt to shorten the computation by iterating through
         the layers until the objective is reached as opposed to calling the
         entire network. Only works on Sequential-like models.
+
+    [1] - https://distill.pub/2017/feature-visualization/
+    [2] - https://github.com/tensorflow/lucid
     """
 
     def __init__(self, model, objective, tfms=VIS_TFMS, optim=torch.optim.Adam, shortcut=False):
