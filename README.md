@@ -27,6 +27,14 @@ pip install git+https://github.com/ttumiel/interpret
 
 `interpret` requires a working installation of PyTorch.
 
+## Tutorials
+
+Run the tutorials in the browser using Google Colab.
+
+Tutorial | Link
+---      | ---
+Introduction to `interpret` | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ttumiel/interpret/blob/master/nbs/Interpret-Intro.ipynb)
+
 ## Usage
 
 `interpret` can be used for both visualisation and attribution. Here an example using a pretrained network is shown.
