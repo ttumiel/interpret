@@ -1,6 +1,6 @@
 import pytest, torch
 import numpy as np
-from interpret import norm, denorm
+from interpret.utils import norm, denorm
 from interpret.data import random_shapes
 
 def test_norm():

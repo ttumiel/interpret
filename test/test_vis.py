@@ -1,6 +1,7 @@
-import pytest
-from interpret import OptVis, ImageParam, denorm
-import torchvision, torch
+import torchvision, torch, pytest
+
+from interpret import OptVis, ImageParam
+from interpret.utils import denorm
 
 def test_neuron():
     network = torchvision.models.vgg11(pretrained=False).to('cuda' if torch.cuda.is_available() else 'cpu')

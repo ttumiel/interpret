@@ -1,6 +1,8 @@
-from interpret import Gradcam, norm
 from PIL import Image
 import torchvision, pytest, torch
+
+from interpret import Gradcam
+from interpret.utils import norm
 
 def test_gradcam():
     network = torchvision.models.vgg11(pretrained=False)
