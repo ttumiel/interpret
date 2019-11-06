@@ -28,18 +28,18 @@ class Gradcam(Attribute):
     """
     def __init__(self, model, img, im_class, layer=0, heatmap_thresh=16):
         self.input_data = img
-    m = model.eval()
-    cl = int(im_class)
-    xb = img
+        m = model.eval()
+        cl = int(im_class)
+        xb = img
 
-    with hook_output(m[layer]) as hook_a:
-        with hook_output(m[layer], grad=True) as hook_g:
-            preds = m(xb)
-            preds[0,int(cl)].backward()
-    acts  = hook_a.stored[0].cpu()
-    if (acts.shape[-1]*acts.shape[-2]) >= heatmap_thresh:
-        grad = hook_g.stored[0][0].cpu()
-        grad_chan = grad.mean(1).mean(1)
+        with hook_output(m[layer]) as hook_a:
+            with hook_output(m[layer], grad=True) as hook_g:
+                preds = m(xb)
+                preds[0,int(cl)].backward()
+        acts  = hook_a.stored[0].cpu()
+        if (acts.shape[-1]*acts.shape[-2]) >= heatmap_thresh:
+            grad = hook_g.stored[0][0].cpu()
+            grad_chan = grad.mean(1).mean(1)
             self.data = F.relu(((acts*grad_chan[...,None,None])).sum(0))
 
 def gradcam_from_examples(learn, n_examples, layer, figsize=(10,10), show_overlay=False, cmap='magma'):
