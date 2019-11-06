@@ -77,6 +77,7 @@ class OptVis():
             loss = self.objective(img)
             loss.backward()
 
+            # Potential debugging step.
             # print(img_param.noise.grad.abs().max(), img_param.noise.grad.abs().mean(),img_param.noise.grad.std())
 
             # Apply transforms to the gradient (normalize, blur, etc.)
@@ -93,6 +94,7 @@ class OptVis():
                 print(i, loss.item())
                 display(zoom(denorm(img), 2))
 
+            # If the noise vector was detached and retached then would have to add to comp graph again
             # self.optim.param_groups[0]['params'][0] = img_obj['optimise']
 
     @classmethod
