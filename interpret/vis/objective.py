@@ -29,7 +29,7 @@ class Objective():
         return self.__class__.__name__
 
     def __repr__(self):
-        return f"{self.cls_name}" if self.name is None else self.name
+        return f"{self.cls_name}" if not hasattr(self, 'name') or self.name is None else self.name
 
     def __add__(self, other):
         if isinstance(other, (int,float)):
@@ -124,3 +124,17 @@ class LayerObjective(Objective):
         if self.channel is None and self.neuron is not None and self.model[self.layer].weight.size(0)==1000:
             msg += f"  {imagenet_labels[self.neuron]}"
         return msg
+
+class DeepDreamObjective(Objective):
+    def __init__(self, model, layer):
+        self.model = model
+        self.layer = layer
+
+    def objective_function(self, x):
+        def layer_hook(module, input, output):
+            self.loss = -torch.mean(output**2)
+
+        with Hook(self.model[self.layer], layer_hook, detach=False, clone=True):
+            x = self.model(x)
+
+        return self.loss
