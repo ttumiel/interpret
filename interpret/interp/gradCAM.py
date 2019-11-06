@@ -42,6 +42,7 @@ class Gradcam(Attribute):
             grad_chan = grad.mean(1).mean(1)
             self.data = F.relu(((acts*grad_chan[...,None,None])).sum(0))
 
+
 def gradcam_from_examples(learn, n_examples, layer, figsize=(10,10), show_overlay=False, cmap='magma'):
     "Utility method to generate a collage of attribution maps from a list of examples."
     c = learn.data.dataset.c
@@ -58,11 +59,12 @@ def gradcam_from_examples(learn, n_examples, layer, figsize=(10,10), show_overla
         label_str = learn.val_data.dataset.decode_label(label.item())
         ax[row][0].set_title(f"Input Image.\nPrediction: {pred_str}.\nLabel: {label_str}.")
         if show_overlay:
-            gradcam(learn.model, img[None], pred if pred<c else 0, layer=layer, show_im=True, ax=ax[row][1], cmap=cmap)
+            attr = Gradcam(learn.model, img[None], pred if pred<c else 0, layer=layer)
+            attr.show(show_image=True, ax=ax[row][1], cmap=cmap)
             ax[row][1].set_title(f'Overlay of Predicted Class {int(pred.item())}')
         for class_label in range(c):
-            gradcam(learn.model, img[None], class_label, layer=layer, show_im=False,
-                    ax=ax[row][class_label+(2 if show_overlay else 1)], cmap=cmap)
+            attr = Gradcam(learn.model, img[None], class_label, layer=layer)
+            attr.show(show_image=False, ax=ax[row][class_label+(2 if show_overlay else 1)], cmap=cmap)
             if c > 1:
                 ax[0][class_label + (2 if show_overlay else 1)].set_title(f"Looking for: {learn.val_data.dataset.decode_label(class_label)}")
             else:
