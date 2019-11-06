@@ -6,9 +6,9 @@ from PIL import Image
 from ..hooks import *
 from .. import core
 from ..utils import denorm
+from .attribute import Attribute
 
-def gradcam(model, img, im_class, layer=0, heatmap_thresh=16, image=True,
-            show_im=True, ax=None, colorbar=False, cmap='magma', alpha=0.4):
+class Gradcam(Attribute):
     """Generates a Grad-CAM attribution map for convolutional neural networks.
 
     Parameters:
@@ -18,12 +18,6 @@ def gradcam(model, img, im_class, layer=0, heatmap_thresh=16, image=True,
     layer (int): the layer the network is using for the attribution. See [1].
     heatmap_thresh (int): prevents heatmaps from being created when the
         feature map is less than 2x2 pixels.
-    image (bool): show the heatmap as an image
-    show_im (bool): show the denormalised input image overlaid on the heatmap.
-    ax: axes on which to plot image.
-    colorbar (bool): show a colorbar.
-    cmap: matplotlib colourmap.
-    alpha (float): transparency value alpha for heatmap.
 
     Returns:
     The Grad-CAM heatmap (torch.Tensor)
@@ -32,6 +26,8 @@ def gradcam(model, img, im_class, layer=0, heatmap_thresh=16, image=True,
     [1] - Grad-CAM: Visual Explanations from Deep Networks via
           Gradient-based Localization. https://arxiv.org/abs/1610.02391
     """
+    def __init__(self, model, img, im_class, layer=0, heatmap_thresh=16):
+        self.input_data = img
     m = model.eval()
     cl = int(im_class)
     xb = img
@@ -44,17 +40,7 @@ def gradcam(model, img, im_class, layer=0, heatmap_thresh=16, image=True,
     if (acts.shape[-1]*acts.shape[-2]) >= heatmap_thresh:
         grad = hook_g.stored[0][0].cpu()
         grad_chan = grad.mean(1).mean(1)
-        mult = F.relu(((acts*grad_chan[...,None,None])).sum(0))
-        if image:
-            xb_im = Image.fromarray(denorm(xb[0], image=False))
-            if ax is None: _,ax = plt.subplots()
-            sz = list(xb_im.size)
-            if show_im:
-                ax.imshow(xb_im)
-            im = ax.imshow(mult, alpha=alpha, extent=(0,*sz,0), interpolation='bilinear', cmap=cmap)
-            if colorbar:
-                ax.figure.colorbar(im, ax=ax)
-        return mult
+            self.data = F.relu(((acts*grad_chan[...,None,None])).sum(0))
 
 def gradcam_from_examples(learn, n_examples, layer, figsize=(10,10), show_overlay=False, cmap='magma'):
     "Utility method to generate a collage of attribution maps from a list of examples."
