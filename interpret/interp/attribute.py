@@ -1,4 +1,7 @@
 import torch
+import matplotlib.pyplot as plt
+
+from ..utils import denorm
 
 
 class Attribute():
@@ -37,3 +40,26 @@ class Attribute():
 
     def __neg__(self):
         return self.__mul__(-1.)
+
+    # TODO: Generalise this method to non-image data
+    def show(self, ax=None, show_image=True, alpha=0.4, cmap='magma', colorbar=False):
+        """Show the generated attribution map.
+
+        Parameters:
+        show_image (bool): show the denormalised input image overlaid on the heatmap.
+        ax: axes on which to plot image.
+        colorbar (bool): show a colorbar.
+        cmap: matplotlib colourmap.
+        alpha (float): transparency value alpha for heatmap.
+        """
+        if ax is None:
+            _,ax = plt.subplots()
+
+        sz = list(self.input_data.shape[2:])
+        if show_image:
+            input_image = denorm(self.input_data[0])
+            ax.imshow(input_image)
+
+        im = ax.imshow(self.data, alpha=alpha, extent=(0,*sz[::-1],0), interpolation='bilinear', cmap=cmap)
+        if colorbar:
+            ax.figure.colorbar(im, ax=ax)
