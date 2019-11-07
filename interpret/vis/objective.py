@@ -12,13 +12,14 @@ class Objective():
     This class has the same functionality as Lucid: objectives
     can be summed, multiplied by scalars, negated or subtracted.
     """
-    def __init__(self, objective_function, name=None):
+    def __init__(self, objective_function=None, name=None):
         """
         Parameters:
         objective_function: function that returns the loss of the network.
         name (str): name of the objective. Used for display. (optional)
         """
-        self.objective_function = objective_function
+        if objective_function is not None:
+            self.objective_function = objective_function
         self.name = name
 
     def __call__(self, x):
@@ -138,3 +139,10 @@ class DeepDreamObjective(Objective):
             x = self.model(x)
 
         return self.loss
+
+class TotalVariation(Objective):
+    """Calculates the total variation of an input image"""
+    def objective_function(self, x):
+        width_sum = torch.sum(torch.abs(x[...,1:] - x[..., :-1]))
+        height_sum = torch.sum(torch.abs(x[...,1:,:] - x[...,:-1,:]))
+        return width_sum + height_sum
