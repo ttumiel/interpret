@@ -127,6 +127,11 @@ class LayerObjective(Objective):
         return msg
 
 class DeepDreamObjective(Objective):
+    """Deep Dream objective from [1]. Maximises all features of
+    a particular layer
+
+    [1] - https://ai.googleblog.com/2015/06/inceptionism-going-deeper-into-neural.html
+    """
     def __init__(self, model, layer):
         self.model = model
         self.layer = layer

@@ -105,3 +105,8 @@ class OptVis():
             channel = int(channel)
         obj = LayerObjective(model, layer, channel, neuron=neuron, shortcut=shortcut)
         return cls(model, obj, **kwargs)
+
+    @classmethod
+    def from_dream(cls, model, layer, **kwargs):
+        "Factory method for deepdream objective"
+        return cls(model, DeepDreamObjective(model, layer), **kwargs)
