@@ -24,20 +24,21 @@ class OptVis():
     implemented in Lucid [2].
 
     Parameters:
-    model (nn.Module): PyTorch model.
-    objective (Objective): The objective that the network will optimise.
-        See factory methods from_layer.
-    tfms (list): list of transformations to potentially apply to image.
-    optim (torch.optim): PyTorch optimisation function.
-    shortcut (bool): Attempt to shorten the computation by iterating through
-        the layers until the objective is reached as opposed to calling the
-        entire network. Only works on Sequential-like models.
+        model (nn.Module): PyTorch model.
+        objective (Objective): The objective that the network will optimise.
+            See factory methods from_layer.
+        tfms (list): list of transformations to potentially apply to image.
+        grad_tfms (list): list of transformations to apply to the gradient of the image.
+        optim (torch.optim): PyTorch optimisation function.
+        shortcut (bool): Attempt to shorten the computation by iterating through
+            the layers until the objective is reached as opposed to calling the
+            entire network. Only works on Sequential-like models.
 
     [1] - https://distill.pub/2017/feature-visualization/
     [2] - https://github.com/tensorflow/lucid
     """
 
-    def __init__(self, model, objective, tfms=VIS_TFMS, optim=torch.optim.Adam, shortcut=False):
+    def __init__(self, model, objective, tfms=VIS_TFMS, grad_tfms=None, optim=torch.optim.Adam, shortcut=False):
         self.model = model
         self.objective = objective
         self.active = False
@@ -52,13 +53,13 @@ class OptVis():
         Generate a visualisation by optimisation of an input. Updates img_param in-place.
 
         Parameters:
-        img_param: object that parameterises the input noise.
-        thresh (tuple): thresholds at which to display the generated image.
-            Only displayed if verbose==True. Input optimised for max(thresh) iters.
-        transform (bool): Whether to transform the input image using self.tfms.
-        lr (float): learning rate for optimisation.
-        wd (float): weight decay for self.optim_fn.
-        verbose (bool): display input on thresholds.
+            img_param: object that parameterises the input noise.
+            thresh (tuple): thresholds at which to display the generated image.
+                Only displayed if verbose==True. Input optimised for max(thresh) iters.
+            transform (bool): Whether to transform the input image using self.tfms.
+            lr (float): learning rate for optimisation.
+            wd (float): weight decay for self.optim_fn.
+            verbose (bool): display input on thresholds.
         """
         if verbose:
             try:
@@ -81,11 +82,10 @@ class OptVis():
             # print(img_param.noise.grad.abs().max(), img_param.noise.grad.abs().mean(),img_param.noise.grad.std())
 
             # Apply transforms to the gradient (normalize, blur, etc.)
-            # with torch.no_grad():
-            #     img_param.noise.grad.data = img_param.noise.grad.data / (img_param.noise.grad.data.std() + 1e-1)
-            #     input_img.grad.data = ReducingGaussianBlur(3, 3, 5)(input_img.grad.data)
+            if grad_tfms:
+                with torch.no_grad():
+                    img_param.noise.grad.data = grad_tfms(img_param.noise.grad.data)
             # print(img_param.noise.grad.abs().max(), img_param.noise.grad.abs().mean(),img_param.noise.grad.std())
-
 
             self.optim.step()
             self.optim.zero_grad()
