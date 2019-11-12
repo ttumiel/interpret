@@ -12,12 +12,12 @@ class Gradcam(Attribute):
     """Generates a Grad-CAM attribution map for convolutional neural networks.
 
     Parameters:
-    model: PyTorch model.
-    img (torch.Tensor): input tensor fed into the network for attribution.
-    im_class (int): the class that the network is attributing on.
-    layer (int): the layer the network is using for the attribution. See [1].
-    heatmap_thresh (int): prevents heatmaps from being created when the
-        feature map is less than 2x2 pixels.
+        model: PyTorch model.
+        img (torch.Tensor): input tensor fed into the network for attribution.
+        im_class (int): the class that the network is attributing on.
+        layer (int): the layer the network is using for the attribution. See [1].
+        heatmap_thresh (int): prevents heatmaps from being created when the
+            feature map is less than 2x2 pixels.
 
     Returns:
     The Grad-CAM heatmap (torch.Tensor)
@@ -41,6 +41,10 @@ class Gradcam(Attribute):
             grad = hook_g.stored[0][0].cpu()
             grad_chan = grad.mean(1).mean(1)
             self.data = F.relu(((acts*grad_chan[...,None,None])).sum(0))
+        else:
+            raise ValueError("Image not large enough to create a heatmap. Increase "
+                            "size of image or move the layer further down into the "
+                            "network")
 
 
 def gradcam_from_examples(learn, n_examples, layer, figsize=(10,10), show_overlay=False, cmap='magma'):
