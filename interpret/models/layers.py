@@ -12,7 +12,7 @@ from ..plots import plot, show_images
 from ..core import freeze, unfreeze
 from ..datasets import DataType
 from .callback import OneCycleSchedule
-from ..interp.gradCAM import gradcam as _gradcam
+from ..attr import gradcam as _gradcam
 
 def accuracy(y_hat, y):
     return (y_hat.argmax(1) == y).float().mean().item()
@@ -81,6 +81,9 @@ class Lambda(nn.Module):
 
     def forward(self, x):
         return self.fn(x)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.fn.__name__})"
 
 class Flatten(nn.Module):
     def forward(self, x):
