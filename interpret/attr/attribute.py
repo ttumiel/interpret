@@ -1,7 +1,7 @@
 import torch
 import matplotlib.pyplot as plt
 
-from ..utils import denorm
+from ..utils import denorm, norm
 
 
 class Attribute():
@@ -22,10 +22,29 @@ class Attribute():
 
     def __mul__(self, other):
         if isinstance(other, Attribute):
-            # TODO: Attempt some shape checking
-            return Attribute(self.data * other.data)
+            self_data, other_data = self.data, other.data
+
+            # Repeat along missing colour dimensions if necessary
+            if self.data.ndim < other.data.ndim:
+                self_data = self.data.unsqueeze(0).repeat(other.data.shape[0],1,1)
+            elif self.data.ndim > other.data.ndim:
+                other_data = other.data.unsqueeze(0).repeat(self.data.shape[0],1,1)
+
+            # Compare shape of data tensors
+            if self_data.shape != other_data.shape:
+                self_data = denorm(self_data)
+                other_data = denorm(other_data)
+                if self_data.size > other_data.size:
+                    other_data = other_data.resize(self_data.size, resample=2)
+                else:
+                    self_data = self_data.resize(other_data.size, resample=2)
+
+                self_data = norm(self_data, unsqueeze=False, grad=False)
+                other_data = norm(other_data, unsqueeze=False, grad=False)
+
+            return Attribute(self_data * other_data, self.input_data)
         elif isinstance(other, (int, float)):
-            return Attribute(self.data * other)
+            return Attribute(self.data * other, self.input_data)
         else:
             raise ValueError(f"Can't multiply by type {type(other)}")
 
