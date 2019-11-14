@@ -47,12 +47,13 @@ class GuidedBackProp(Attribute):
 
     [1] - https://arxiv.org/pdf/1412.6806.pdf
     """
-    def __init__(self, model, input_img, target_class):
+    def __init__(self, model, input_img, target_class, deconvnet=False):
         self.input_data = input_img
 
         _, relu_paths = find_all(model, nn.ReLU, path=True)
+        relu_override = DeconvnetReLU.apply if deconvnet else GuidedReLU.apply
         for p in relu_paths:
-            model[p] = Lambda(GuidedReLU.apply)
+            model[p] = Lambda(relu_override)
         # hooks = [l.register_backward_hook(guided_relu) for l in relu_modules]
 
         # with hook_output(model) as h:
