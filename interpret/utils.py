@@ -64,3 +64,23 @@ def get_layer_names(m, upper_name='', _title=True):
                 m.__class__.__name__,
                 m.weight.size(1) if hasattr(m, 'weight') and len(m.weight.shape)>1 else '-',
                 m.weight.size(0) if hasattr(m, 'weight') else '-'))
+
+def find_all(model, name, path=False, _upper_name=""):
+    matches = []
+    pathnames = []
+    if hasattr(model, "named_children") and len(list(model.named_children()))!=0:
+        for pathname, m in model.named_children():
+            if isinstance(m, name):
+                matches += [m]
+                if path:
+                    pathnames += [_upper_name + pathname]
+            else:
+                next_find = find_all(m, name, path=path, _upper_name=_upper_name+pathname + '/')
+                if path:
+                    matches += next_find[0]
+                    pathnames += next_find[1]
+                else:
+                    matches += next_find
+    if path:
+        return matches, pathnames
+    return matches
