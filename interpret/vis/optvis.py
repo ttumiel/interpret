@@ -85,7 +85,6 @@ class OptVis():
             if grad_tfms:
                 with torch.no_grad():
                     img_param.noise.grad.data = grad_tfms(img_param.noise.grad.data)
-            # print(img_param.noise.grad.abs().max(), img_param.noise.grad.abs().mean(),img_param.noise.grad.std())
 
             self.optim.step()
             self.optim.zero_grad()
@@ -93,9 +92,6 @@ class OptVis():
             if verbose and i in thresh:
                 print(i, loss.item())
                 display(zoom(denorm(img), 2))
-
-            # If the noise vector was detached and retached then would have to add to comp graph again
-            # self.optim.param_groups[0]['params'][0] = img_obj['optimise']
 
     @classmethod
     def from_layer(cls, model, layer, channel=None, neuron=None, shortcut=False, **kwargs):
