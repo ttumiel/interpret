@@ -2,7 +2,7 @@
 
 from torch import nn
 
-def get(s,i):
+def get_module_item(s,i):
     if isinstance(i, int):
         if isinstance(s, nn.Sequential):
             return _orig_seq_get(s, i)
@@ -14,6 +14,14 @@ def get(s,i):
         for layer in layers:
             l = getattr(l, layer)
         return l
+
+def set_module_item(self, m, new_m):
+    if "/" in m:
+        root, name = m.rsplit('/', maxsplit=1)
+        root_module = self[root]
+        setattr(root_module, name, new_m)
+    else:
+        setattr(self, m, new_m)
 
 def freeze(s,bn=False):
     def inner(m):
@@ -29,7 +37,9 @@ def unfreeze(s):
         p.requires_grad_(True)
 
 _orig_seq_get = nn.Sequential.__getitem__
-nn.Sequential.__getitem__ = get
-nn.Module.__getitem__ = get
+nn.Sequential.__getitem__ = get_module_item
+nn.Module.__getitem__ = get_module_item
+nn.Sequential.__setitem__ = set_module_item
+nn.Module.__setitem__ = set_module_item
 nn.Module.freeze = freeze
 nn.Module.unfreeze = unfreeze
