@@ -48,21 +48,21 @@ class GuidedBackProp(Attribute):
     [1] - https://arxiv.org/pdf/1412.6806.pdf
     """
     def __init__(self, model, input_img, target_class, deconvnet=False):
+        m = model.eval()
         self.input_data = input_img
 
-        _, relu_paths = find_all(model, nn.ReLU, path=True)
+        _, relu_paths = find_all(m, nn.ReLU, path=True)
         relu_override = DeconvnetReLU.apply if deconvnet else GuidedReLU.apply
         for p in relu_paths:
-            model[p] = Lambda(relu_override)
+            m[p] = Lambda(relu_override)
         # hooks = [l.register_backward_hook(guided_relu) for l in relu_modules]
 
-        # with hook_output(model) as h:
-        loss = model(input_img)[0, target_class]
+        # with hook_output(m) as h:
+        loss = m(input_img)[0, target_class]
 
         loss.backward()
 
-        self.data = input_img.grad.detach().clone().squeeze() #.permute(1,2,0)
-        # self.data = (data+data.min().abs())/(data.max()+data.min().abs())
+        self.data = input_img.grad.detach().clone().squeeze()
 
         # for h in hooks:
         #     h.remove()
