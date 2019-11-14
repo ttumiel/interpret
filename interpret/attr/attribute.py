@@ -84,6 +84,17 @@ class Attribute():
             input_image = denorm(self.input_data[0])
             ax.imshow(input_image)
 
-        im = ax.imshow(self.data, alpha=alpha, extent=(0,*sz[::-1],0), interpolation='bilinear', cmap=cmap)
+        data = self.data
+        if (data < 0).any():
+            data = (data+data.min().abs())/(data.max()+data.min().abs())
+
+        if data.ndim >= 3:
+            data = data.squeeze()
+            if data.ndim == 3:
+                data = data.permute(1,2,0)
+            else:
+                raise RuntimeError(f"Can't display data shape {self.data.shape} as an image.")
+
+        im = ax.imshow(data, alpha=alpha, extent=(0,*sz[::-1],0), interpolation='bilinear', cmap=cmap)
         if colorbar:
             ax.figure.colorbar(im, ax=ax)
