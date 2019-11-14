@@ -43,6 +43,7 @@ class OptVis():
         self.objective = objective
         self.active = False
         self.tfms = tfms
+        self.grad_tfms = grad_tfms
         self.optim_fn = optim
         self.shortcut = shortcut
         print(f"Optimising for {objective}")
@@ -82,9 +83,9 @@ class OptVis():
             # print(img_param.noise.grad.abs().max(), img_param.noise.grad.abs().mean(),img_param.noise.grad.std())
 
             # Apply transforms to the gradient (normalize, blur, etc.)
-            if grad_tfms:
+            if self.grad_tfms is not None:
                 with torch.no_grad():
-                    img_param.noise.grad.data = grad_tfms(img_param.noise.grad.data)
+                    img_param.noise.grad.data = self.grad_tfms(img_param.noise.grad.data)
 
             self.optim.step()
             self.optim.zero_grad()
