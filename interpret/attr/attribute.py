@@ -1,4 +1,3 @@
-import torch
 import matplotlib.pyplot as plt
 
 from ..utils import denorm, norm
@@ -8,15 +7,21 @@ class Attribute():
     """Class defining attribution maps over inputs. Contains
     useful plotting methods and implements mathematical
     operations on the underlying data.
+
+    Parameters:
+        data (torch.Tensor): the attribution map
+        input_data (torch.Tensor): the input to the network
     """
-    def __init__(self, data):
+    def __init__(self, data, input_data):
         self.data = data
+        self.input_data = input_data
 
     def __add__(self, other):
         if isinstance(other, Attribute):
-            return Attribute(self.data + other.data)
+            # TODO: Add shape checking and generalise from __mul__
+            return Attribute(self.data + other.data, self.input_data)
         elif isinstance(other, (int, float)):
-            return Attribute(self.data + other)
+            return Attribute(self.data + other, self.input_data)
         else:
             raise ValueError(f"Can't add type {type(other)}")
 
