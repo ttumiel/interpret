@@ -86,7 +86,7 @@ class Attribute():
 
         data = self.data
         if (data < 0).any():
-            data = (data+data.min().abs())/(data.max()+data.min().abs())
+            data = (data-data.min())/(data.max()-data.min())
 
         if data.ndim >= 3:
             data = data.squeeze()
