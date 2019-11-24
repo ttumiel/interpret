@@ -39,6 +39,7 @@ class DeconvnetReLU(torch.autograd.Function):
         grad_input[grad_input < 0] = 0
         return grad_input
 
+# TODO: Change from intrusive autograd functions to hooks if possible
 class GuidedBackProp(Attribute):
     """Implements Guided Backpropagation [1]. This algorithms
     creates a saliency map using the gradient of the network
@@ -50,6 +51,9 @@ class GuidedBackProp(Attribute):
     def __init__(self, model, input_img, target_class, deconvnet=False):
         m = model.eval()
         self.input_data = input_img
+
+        if self.input_data.grad is not None:
+            self.input_data.grad.fill_(0)
 
         _, relu_paths = find_all(m, nn.ReLU, path=True)
         relu_override = DeconvnetReLU.apply if deconvnet else GuidedReLU.apply
@@ -63,6 +67,10 @@ class GuidedBackProp(Attribute):
         loss.backward()
 
         self.data = input_img.grad.detach().clone().squeeze()
+        # input_img.grad.fill_(0)
 
         # for h in hooks:
         #     h.remove()
+
+        for p in relu_paths:
+            m[p] = nn.ReLU(True)
