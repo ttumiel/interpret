@@ -6,7 +6,11 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm_notebook as tqdm
 from collections import OrderedDict
 import time, math
-from IPython.display import display, clear_output
+
+try:
+    from IPython.display import display, clear_output
+except ImportError:
+    pass
 
 from ..plots import plot, show_images
 from ..core import freeze, unfreeze
