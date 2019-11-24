@@ -70,11 +70,11 @@ class Attribute():
         """Show the generated attribution map.
 
         Parameters:
-        show_image (bool): show the denormalised input image overlaid on the heatmap.
-        ax: axes on which to plot image.
-        colorbar (bool): show a colorbar.
-        cmap: matplotlib colourmap.
-        alpha (float): transparency value alpha for heatmap.
+            show_image (bool): show the denormalised input image overlaid on the heatmap.
+            ax: axes on which to plot image.
+            colorbar (bool): show a colorbar.
+            cmap: matplotlib colourmap.
+            alpha (float): transparency value alpha for heatmap.
         """
         if ax is None:
             _,ax = plt.subplots()
@@ -86,7 +86,7 @@ class Attribute():
 
         data = self.data
         if (data < 0).any():
-            data = (data+data.min().abs())/(data.max()+data.min().abs())
+            data = (data-data.min())/(data.max()-data.min())
 
         if data.ndim >= 3:
             data = data.squeeze()
