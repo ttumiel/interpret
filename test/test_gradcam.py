@@ -1,6 +1,8 @@
-from interpret import gradcam, norm
 from PIL import Image
 import torchvision, pytest, torch
+
+from interpret import Gradcam
+from interpret.utils import norm
 
 def test_gradcam():
     network = torchvision.models.vgg11(pretrained=False)
@@ -8,6 +10,6 @@ def test_gradcam():
 
     class_number = 207
     layer = 'features/20'
-    saliency_map = gradcam(network, input_img, im_class=class_number, layer=layer)
+    saliency_map = Gradcam(network, input_img, im_class=class_number, layer=layer)
 
-    assert list(saliency_map.shape) == [7,7]
+    assert list(saliency_map.data.shape) == [7,7]

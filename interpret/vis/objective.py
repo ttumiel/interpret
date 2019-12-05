@@ -12,13 +12,14 @@ class Objective():
     This class has the same functionality as Lucid: objectives
     can be summed, multiplied by scalars, negated or subtracted.
     """
-    def __init__(self, objective_function, name=None):
+    def __init__(self, objective_function=None, name=None):
         """
         Parameters:
         objective_function: function that returns the loss of the network.
         name (str): name of the objective. Used for display. (optional)
         """
-        self.objective_function = objective_function
+        if objective_function is not None:
+            self.objective_function = objective_function
         self.name = name
 
     def __call__(self, x):
@@ -29,7 +30,7 @@ class Objective():
         return self.__class__.__name__
 
     def __repr__(self):
-        return f"{self.cls_name}" if self.name is None else self.name
+        return f"{self.cls_name}" if not hasattr(self, 'name') or self.name is None else self.name
 
     def __add__(self, other):
         if isinstance(other, (int,float)):
@@ -124,3 +125,29 @@ class LayerObjective(Objective):
         if self.channel is None and self.neuron is not None and self.model[self.layer].weight.size(0)==1000:
             msg += f"  {imagenet_labels[self.neuron]}"
         return msg
+
+class DeepDreamObjective(Objective):
+    """Deep Dream objective from [1]. Maximises all features of
+    a particular layer
+
+    [1] - https://ai.googleblog.com/2015/06/inceptionism-going-deeper-into-neural.html
+    """
+    def __init__(self, model, layer):
+        self.model = model
+        self.layer = layer
+
+    def objective_function(self, x):
+        def layer_hook(module, input, output):
+            self.loss = -torch.mean(output**2)
+
+        with Hook(self.model[self.layer], layer_hook, detach=False, clone=True):
+            x = self.model(x)
+
+        return self.loss
+
+class TotalVariation(Objective):
+    """Calculates the total variation of an input image"""
+    def objective_function(self, x):
+        width_sum = torch.sum(torch.abs(x[...,1:] - x[..., :-1]))
+        height_sum = torch.sum(torch.abs(x[...,1:,:] - x[...,:-1,:]))
+        return width_sum + height_sum
