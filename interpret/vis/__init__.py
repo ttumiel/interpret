@@ -1,2 +1,3 @@
 from .optvis import OptVis
-from .param import ImageParam
+from .param import *
+from .objective import *
