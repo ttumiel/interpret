@@ -13,10 +13,10 @@ from ..utils import denorm
 from .objective import *
 from .param import *
 
-VIS_TFMS = torchvision.transforms.Compose([
+VIS_TFMS = [
     RandomAffineTfm(scale, [0.9, 1.1]),
     RandomAffineTfm(rotate, 10),
-])
+]
 
 class OptVis():
     """
@@ -39,17 +39,17 @@ class OptVis():
     [2] - https://github.com/tensorflow/lucid
     """
 
-    def __init__(self, model, objective, transforms=None, optim=torch.optim.Adam, shortcut=False, device=None):
+    def __init__(self, model, objective, transforms=None, optim=torch.optim.Adam, shortcut=False, device=None, grad_tfms=None):
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu' if device is None else device
         self.model = model.to(self.device).eval()
         self.objective = objective
         self.active = False
-        self.tfms = transforms if transforms is not None else VIS_TFMS
+        self.tfms = transforms if transforms is not None else VIS_TFMS.copy()
         self.grad_tfms = grad_tfms
         self.optim_fn = optim
         self.shortcut = shortcut
+        self.upsample = True
         print(f"Optimising for {objective}")
-        self.model.eval()
 
     def vis(self, img_param=None, thresh=(500,), transform=True, lr=0.05, wd=0., verbose=True):
         """
@@ -73,19 +73,22 @@ class OptVis():
         if img_param is None:
             img_param = ImageParam(128)
 
+        if img_param.size < 224 and self.upsample:
+            self.tfms.append(torch.nn.Upsample(size=224, mode='bilinear', align_corners=True))
+            self.upsample = False
+
+        transforms = torchvision.transforms.Compose(self.tfms)
+
         freeze(self.model.eval(), bn=True)
         self.optim = self.optim_fn(img_param.parameters(), lr=lr, weight_decay=wd)
         for i in tqdm(range(1,max(thresh)+1)):
             img = img_param()
 
             if transform:
-                img = self.tfms(img)
+                img = transforms(img)
 
             loss = self.objective(img)
             loss.backward()
-
-            # Potential debugging step.
-            # print(img_param.noise.grad.abs().max(), img_param.noise.grad.abs().mean(),img_param.noise.grad.std())
 
             # Apply transforms to the gradient (normalize, blur, etc.)
             if self.grad_tfms is not None:
@@ -97,7 +100,7 @@ class OptVis():
 
             if verbose and i in thresh:
                 print(i, loss.item())
-                display(zoom(denorm(img_param()), 2))
+                display(denorm(img_param()))
 
         return img_param
 
