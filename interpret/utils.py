@@ -5,6 +5,8 @@ import numpy as np
 
 from .imagenet import imagenet_stats
 
+__all__ = ['zoom', 'denorm', 'norm', 'get_layer_names']
+
 Path.ls = lambda c: list(c.iterdir())
 
 def zoom(im, zoom=2):

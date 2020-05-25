@@ -5,6 +5,8 @@ from ..hooks import Hook
 from ..core import *
 from ..imagenet import imagenet_stats, imagenet_labels
 
+__all__ = ['Objective', 'LayerObjective', 'DeepDreamObjective']
+
 class Objective():
     """Defines an Objective which OptVis will optimise. The
     Objective class should have a callable function which

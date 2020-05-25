@@ -9,6 +9,8 @@ from ..transforms import resize_norm_transform
 from ..utils import denorm, norm
 from ..imagenet import imagenet_stats
 
+__all__ = ['ImageParam', 'ImageFile']
+
 # Decorrelation code ported from Lucid: https://github.com/tensorflow/lucid
 color_correlation_svd_sqrt = np.asarray([[0.26, 0.09, 0.02],
                                         [0.27, 0.00, -0.05],
