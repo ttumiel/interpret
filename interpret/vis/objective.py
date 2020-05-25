@@ -1,6 +1,8 @@
 "Visualisation Objectives"
 
 import torch
+from torch import nn
+
 from ..hooks import Hook
 from ..core import *
 from ..imagenet import imagenet_stats, imagenet_labels
