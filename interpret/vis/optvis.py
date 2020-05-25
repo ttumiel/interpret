@@ -73,6 +73,8 @@ class OptVis():
         if img_param is None:
             img_param = ImageParam(128)
 
+        img_param.to(self.device)
+
         if img_param.size < 224 and self.upsample:
             self.tfms.append(torch.nn.Upsample(size=224, mode='bilinear', align_corners=True))
             self.upsample = False
