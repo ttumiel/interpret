@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import torchvision
 from PIL import Image
+from tqdm import tqdm
 
 from ..core import *
 from ..utils import *
@@ -38,18 +39,19 @@ class OptVis():
     [2] - https://github.com/tensorflow/lucid
     """
 
-    def __init__(self, model, objective, tfms=VIS_TFMS, grad_tfms=None, optim=torch.optim.Adam, shortcut=False):
-        self.model = model
+    def __init__(self, model, objective, transforms=None, optim=torch.optim.Adam, shortcut=False, device=None):
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu' if device is None else device
+        self.model = model.to(self.device).eval()
         self.objective = objective
         self.active = False
-        self.tfms = tfms
+        self.tfms = transforms if transforms is not None else VIS_TFMS
         self.grad_tfms = grad_tfms
         self.optim_fn = optim
         self.shortcut = shortcut
         print(f"Optimising for {objective}")
         self.model.eval()
 
-    def vis(self, img_param, thresh=(500,), transform=True, lr=0.05, wd=0., verbose=True):
+    def vis(self, img_param=None, thresh=(500,), transform=True, lr=0.05, wd=0., verbose=True):
         """
         Generate a visualisation by optimisation of an input. Updates img_param in-place.
 
@@ -68,9 +70,12 @@ class OptVis():
             except ImportError:
                 raise ValueError("Can't use verbose if not in IPython notebook.")
 
-        freeze(self.model, bn=True)
+        if img_param is None:
+            img_param = ImageParam(128)
+
+        freeze(self.model.eval(), bn=True)
         self.optim = self.optim_fn(img_param.parameters(), lr=lr, weight_decay=wd)
-        for i in range(max(thresh)+1):
+        for i in tqdm(range(1,max(thresh)+1)):
             img = img_param()
 
             if transform:
@@ -92,7 +97,9 @@ class OptVis():
 
             if verbose and i in thresh:
                 print(i, loss.item())
-                display(zoom(denorm(img), 2))
+                display(zoom(denorm(img_param()), 2))
+
+        return img_param
 
     @classmethod
     def from_layer(cls, model, layer, channel=None, neuron=None, shortcut=False, **kwargs):
