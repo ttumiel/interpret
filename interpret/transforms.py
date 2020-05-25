@@ -130,8 +130,8 @@ def affine(mat):
     "applies an affine transform"
     def inner(x):
         if x.dim() == 3: x=x.unsqueeze(0)
-        grid = affine_grid(mat, x.size())
-        rot_im = grid_sample(x, grid, padding_mode="reflection")
+        grid = affine_grid(mat, x.size(), align_corners=False)
+        rot_im = grid_sample(x, grid, padding_mode="reflection", align_corners=False)
         return rot_im
     return inner
 
