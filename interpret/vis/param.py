@@ -28,7 +28,7 @@ def _linear_decorrelate_color(t):
     """
     assert t.size(0) == 1
     t_flat = t.squeeze().view([3, -1])
-    color_correlation_normalized = torch.tensor(color_correlation_svd_sqrt / max_norm_svd_sqrt, device='cuda' if torch.cuda.is_available() else 'cpu')
+    color_correlation_normalized = torch.tensor(color_correlation_svd_sqrt / max_norm_svd_sqrt, device=t.device)
     t_flat = color_correlation_normalized @ t_flat
     t = t_flat.view(t.size())
     return t
@@ -51,7 +51,7 @@ def fourier_image(size, noise_scale=0.01, decay_power=1, device='cuda' if torch.
         scaled_spectrum_t = torch.tensor(scale, dtype=torch.float32, device=device)[None, ..., None] * noise
 
         output = torch.irfft(scaled_spectrum_t, 2, onesided=False).unsqueeze(0)
-        return output
+        return output / 4.0
 
     return noise, get_image
 
