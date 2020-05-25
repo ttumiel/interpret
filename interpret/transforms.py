@@ -177,7 +177,7 @@ class RandomAffineTfm():
 
     def __call__(self, x):
         if random.random()<self.p:
-        return self.tfm(*[random.random()*(a[1]-a[0])+a[0] if isinstance(a, list) else random.random()*a*2-a for a in self.args])(x)
+            return self.tfm(*[random.random()*(a[1]-a[0])+a[0] if isinstance(a, list) else random.random()*a*2-a for a in self.args])(x)
         return x
 
 class RandomEvery():
