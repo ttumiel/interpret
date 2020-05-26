@@ -46,7 +46,7 @@ def test_shortcut(network, imsize, channel):
 
 def test_image_params(network, imsize, channel):
     optvis = OptVis.from_layer(network, layer="features/18", channel=channel, neuron=6)
-    optvis.vis(thresh=(1,))
+    optvis.vis(thresh=(1,), verbose=False)
     init_loss = optvis.objective.loss
 
     # with fft and decorrelate
