@@ -15,6 +15,10 @@ class Objective():
     should return the loss associated with the forward pass.
     This class has the same functionality as Lucid: objectives
     can be summed, multiplied by scalars, negated or subtracted.
+
+    To create a new Objective class, you can either subclass from
+    this class so that you can add state or you can decorate a
+    function with @Objective to turn it into an Objective.
     """
     def __init__(self, objective_function=None, name=None):
         """
