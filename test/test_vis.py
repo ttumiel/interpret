@@ -30,18 +30,25 @@ def test_neuron_fail(network, channel):
         optvis = OptVis.from_layer(network, layer="classifier/6", channel=channel, neuron=6)
         optvis.vis(verbose=False)
 
+def test_channel(network, imsize, channel):
+    optvis = OptVis.from_layer(network, layer="features/18", channel=channel, neuron=6)
+    optvis.vis(thresh=(10,), verbose=False)
+
+def test_image_params(network, imsize, channel):
+    optvis = OptVis.from_layer(network, layer="features/18", channel=channel, neuron=6)
+
     # with fft and decorrelate
     img_param = ImageParam(imsize, fft=True, decorrelate=True)
-    optvis.vis(img_param, thresh=(10,), transform=True, lr=0.05, verbose=False)
+    optvis.vis(img_param, thresh=(10,), verbose=False)
 
     # with fft and without decorrelate
     img_param = ImageParam(imsize, fft=True, decorrelate=True)
-    optvis.vis(img_param, thresh=(10,), transform=True, lr=0.05, verbose=False)
+    optvis.vis(img_param, thresh=(10,), verbose=False)
 
     # without fft and with decorrelate
     img_param = ImageParam(imsize, fft=True, decorrelate=True)
-    optvis.vis(img_param, thresh=(10,), transform=True, lr=0.05, verbose=False)
+    optvis.vis(img_param, thresh=(10,), verbose=False)
 
     # without fft and decorrelate
     img_param = ImageParam(imsize, fft=False, decorrelate=False)
-    optvis.vis(img_param, thresh=(10,), transform=False, verbose=False)
+    optvis.vis(img_param, thresh=(10,), verbose=False)
