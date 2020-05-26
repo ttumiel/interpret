@@ -5,10 +5,12 @@ import numpy as np
 
 from .imagenet import imagenet_stats
 
+__all__ = ['zoom', 'denorm', 'norm', 'get_layer_names']
+
 Path.ls = lambda c: list(c.iterdir())
 
 def zoom(im, zoom=2):
-    return im.transform((int(im.size[0]*zoom), int(im.size[1]*zoom)), Image.EXTENT, (0, 0, im.size[0], im.size[1]))
+    return im.transform((int(im.size[0]*zoom), int(im.size[1]*zoom)), Image.EXTENT, (0, 0, im.size[0], im.size[1]), resample=Image.BILINEAR)
 
 def denorm(im, mean=imagenet_stats[0], std=imagenet_stats[1], image=True):
     "Denormalize an image"

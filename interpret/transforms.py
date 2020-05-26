@@ -130,8 +130,8 @@ def affine(mat):
     "applies an affine transform"
     def inner(x):
         if x.dim() == 3: x=x.unsqueeze(0)
-        grid = affine_grid(mat, x.size())
-        rot_im = grid_sample(x, grid, padding_mode="reflection")
+        grid = affine_grid(mat, x.size(), align_corners=False)
+        rot_im = grid_sample(x, grid, padding_mode="reflection", align_corners=False)
         return rot_im
     return inner
 
@@ -170,12 +170,15 @@ def scale(scale):
 
 class RandomAffineTfm():
     "Randomly apply an affine transform on a tensor."
-    def __init__(self, tfm, *args):
+    def __init__(self, tfm, *args, p=0.5):
         self.tfm = tfm
         self.args = args
+        self.p = p
 
     def __call__(self, x):
-        return self.tfm(*[random.random()*(a[1]-a[0])+a[0] if isinstance(a, list) else random.random()*a*2-a for a in self.args])(x)
+        if random.random()<self.p:
+            return self.tfm(*[random.random()*(a[1]-a[0])+a[0] if isinstance(a, list) else random.random()*a*2-a for a in self.args])(x)
+        return x
 
 class RandomEvery():
     def __init__(self, tfms, p=0.5):

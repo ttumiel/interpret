@@ -2,6 +2,8 @@
 
 from torch import nn
 
+__all__ = ['freeze', 'unfreeze']
+
 def get(s,i):
     if isinstance(i, int):
         if isinstance(s, nn.Sequential):
