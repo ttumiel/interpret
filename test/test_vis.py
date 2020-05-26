@@ -12,6 +12,14 @@ def network():
 def imsize():
     return 64
 
+@pytest.fixture
+def neuron():
+    return random.randrange(1000)
+
+@pytest.fixture
+def channel():
+    return random.randrange(512)
+
 def test_neuron(network, imsize, neuron):
     optvis = OptVis.from_layer(network, layer="classifier/6", neuron=neuron)
     img_param = ImageParam(imsize, fft=True, decorrelate=True)
