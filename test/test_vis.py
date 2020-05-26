@@ -12,13 +12,15 @@ def network():
 def imsize():
     return 64
 
-def test_neuron(network, imsize):
-    optvis = OptVis.from_layer(network, layer="classifier/6", neuron=5)
+def test_neuron(network, imsize, neuron):
+    optvis = OptVis.from_layer(network, layer="classifier/6", neuron=neuron)
     img_param = ImageParam(imsize, fft=True, decorrelate=True)
     optvis.vis(img_param, thresh=(10,), transform=True, lr=0.05, verbose=False)
 
-def test_channel(network, imsize):
-    optvis = OptVis.from_layer(network, layer="classifier/6", channel=23)
+def test_neuron_fail(network, channel):
+    with pytest.raises(AssertionError):
+        optvis = OptVis.from_layer(network, layer="classifier/6", channel=channel, neuron=6)
+        optvis.vis(verbose=False)
 
     # with fft and decorrelate
     img_param = ImageParam(imsize, fft=True, decorrelate=True)
