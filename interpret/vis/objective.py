@@ -89,23 +89,23 @@ class LayerObjective(Objective):
 
         try:
             self.model[layer]
-        except:
+        except AttributeError:
             raise ValueError(f"Can't find layer {layer}. Use 'get_layer_names' to print all layer names.")
 
     def objective_function(self, x):
         "Apply the input to the network and set the loss."
         def layer_hook(module, input, output):
-            if self.neuron is None:
-                if self.channel is None:
-                    self.loss = -torch.mean(output)
-                else:
-                    self.loss = -torch.mean(output[:, self.channel])
-            else:
-                if isinstance(module, nn.Conv2d):
-                    # TODO: Check if channel is None and handle
-                    self.loss = -torch.mean(output[:, self.channel, self.neuron])
-                elif isinstance(module, nn.Linear):
-                    self.loss = -torch.mean(output[:, self.neuron])
+            rank = len(output.shape)
+            c = self.channel or slice(None)
+            n = self.neuron or slice(None)
+
+            if rank == 4:
+                self.loss = -torch.mean(output[:, c, n, n])
+            elif rank == 2:
+                self.loss = -torch.mean(output[:, n])
+                assert self.channel is None, f"Channel is unused for layer {self.layer}"
+
+            # Set flag for shortcutting the computation
             self.active = True
 
         with Hook(self.model[self.layer], layer_hook, detach=False, clone=True):
