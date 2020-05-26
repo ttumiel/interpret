@@ -13,7 +13,7 @@ extras = {
 
 setuptools.setup(
     name="interpret-pytorch",
-    version="0.1.0",
+    version="0.2.0",
     author="Thomas Tumiel",
     description="Interpreting deep learning models in PyTorch.",
     long_description=long_description,
