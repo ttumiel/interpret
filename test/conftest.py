@@ -1,5 +1,5 @@
-import torchvision, torch, pytest
-import random
+import torchvision, torch
+import random, pytest
 
 @pytest.fixture(scope='session')
 def network():
@@ -8,8 +8,12 @@ def network():
     )
 
 @pytest.fixture(scope='session')
-def layer():
+def conv_layer():
     return 'features/18'
+
+@pytest.fixture(scope='session')
+def linear_layer():
+    return 'classifier/6'
 
 @pytest.fixture(scope='session')
 def imsize():

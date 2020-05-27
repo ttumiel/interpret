@@ -3,8 +3,8 @@ from interpret import OptVis, ImageParam, ImageFile
 from . import assert_loss_decreases
 
 
-def test_image_params(network, imsize, channel, n_steps):
-    optvis = OptVis.from_layer(network, layer="features/18", channel=channel, neuron=6)
+def test_image_params(network, imsize, conv_layer, channel, n_steps):
+    optvis = OptVis.from_layer(network, conv_layer, channel=channel, neuron=6)
 
     # with fft and decorrelate
     img_param = ImageParam(imsize, fft=True, decorrelate=True)

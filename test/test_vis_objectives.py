@@ -5,9 +5,9 @@ from interpret import OptVis, LayerObjective, ImageFile
 from . import assert_loss_decreases
 
 
-def test_objective_operators(network, layer, channels, n_steps):
-    objective1 = LayerObjective(network, layer, channel=channels[0])
-    objective2 = LayerObjective(network, layer, channel=channels[1])
+def test_objective_operators(network, conv_layer, channels, n_steps):
+    objective1 = LayerObjective(network, conv_layer, channel=channels[0])
+    objective2 = LayerObjective(network, conv_layer, channel=channels[1])
 
     # Sum
     optvis = OptVis(network, objective1+objective2)
@@ -36,8 +36,8 @@ def test_objective_operators(network, layer, channels, n_steps):
     assert_loss_decreases(optvis, thresh=n_steps)
 
 
-def test_dream(network, imsize, n_steps):
-    optvis = OptVis.from_dream(network, layer="features/18")
+def test_dream(network, imsize, conv_layer, n_steps):
+    optvis = OptVis.from_dream(network, conv_layer)
     img_param = ImageFile("test/fixtures/dog.jpg", imsize)
     optvis.vis(img_param, thresh=n_steps, transform=False, verbose=False)
     assert_loss_decreases(optvis, train=False)
