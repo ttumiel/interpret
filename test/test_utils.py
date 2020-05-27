@@ -1,12 +1,13 @@
 import pytest, torch
 import numpy as np
+from PIL import Image
+
 from interpret.utils import norm, denorm
-from interpret.data import random_shapes
 
 def test_norm():
-    img = random_shapes(size=30, shape='circle', min_size=10, max_size=50,
-                        coord_limits=None, background='color', color=True, number=5)[0]
-    data = norm(img, mean=np.array(img).mean((0,1))/255, std=np.array(img).std((0,1))/255)
+    data = (np.random.random((32,32,3))*255).astype('uint8')
+    img = Image.fromarray(data)
+    data = norm(img, mean=(data/255).mean((0,1)), std=(data/255).std((0,1)))
 
     assert data.mean().item() == pytest.approx(0., abs=1e-6)
     assert data.std().item() == pytest.approx(1., 1e-3)
@@ -20,8 +21,7 @@ def test_denorm():
     assert denorm_data.shape == (50,50,3)
 
 def test_norm_denorm():
-    img = random_shapes(size=50, shape='circle', min_size=10, max_size=50,
-                        coord_limits=None, background='color', color=True, number=5)[0]
+    img = Image.fromarray(np.random.random((32,32,3)), 'RGB')
 
     data = norm(img)
     denorm_data = denorm(data, image=False)
