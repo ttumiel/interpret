@@ -42,17 +42,17 @@ class Objective():
 
     def __add__(self, other):
         if isinstance(other, (int,float)):
-            name = " + ".join([self.__repr__(), other.__repr__()])
+            name = " + ".join([repr(self), repr(other)])
             return Objective(lambda x: other + self(x), name=name)
         elif isinstance(other, Objective):
-            name = " + ".join([self.__repr__(), other.__repr__()])
+            name = " + ".join([repr(self), repr(other)])
             return Objective(lambda x: other(x) + self(x), name=name)
         else:
             raise TypeError(f"Can't add value of type {type(other)}")
 
     def __mul__(self, other):
         if isinstance(other, (int,float)):
-            name = f"{other}*{self.__repr__()}"
+            name = f"{other}*{repr(self)}"
             return Objective(lambda x: other * self(x), name=name)
         else:
             raise TypeError(f"Can't add value of type {type(other)}")
@@ -60,14 +60,17 @@ class Objective():
     def __sub__(self, other):
         return self + (-1*other)
 
+    def __rsub__(self, other):
+        return -1*self + other
+
     def __rmul__(self, other):
-        return self.__mul__(other)
+        return self * other
 
     def __radd__(self, other):
-        return self.__add__(other)
+        return self + other
 
     def __neg__(self):
-        return self.__mul__(-1.)
+        return -1. * self
 
 class LayerObjective(Objective):
     """Generate an Objective from a particular layer of a network.
