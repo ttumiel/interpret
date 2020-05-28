@@ -23,8 +23,8 @@ class Objective():
     def __init__(self, objective_function=None, name=None):
         """
         Parameters:
-        objective_function: function that returns the loss of the network.
-        name (str): name of the objective. Used for display. (optional)
+            objective_function: function that returns the loss of the network.
+            name (str): name of the objective. Used for display. (optional)
         """
         if objective_function is not None:
             self.objective_function = objective_function
@@ -75,12 +75,12 @@ class LayerObjective(Objective):
     options for selecting the channel or neuron of the layer.
 
     Parameters:
-    model (nn.Module): PyTorch model.
-    layer (str or int): the layer to optimise.
-    channel (int): the channel to optimise. (optional)
-    neuron (int): the neuron to optimise. (optional)
-    shortcut (bool): Whether to attempt to shortcut the network's
-        computation. Only works for Sequential type models.
+        model (nn.Module): PyTorch model.
+        layer (str or int): the layer to optimise.
+        channel (int): the channel to optimise. (optional)
+        neuron (int): the neuron to optimise. (optional)
+        shortcut (bool): Whether to attempt to shortcut the network's
+            computation. Only works for Sequential type models.
     """
     def __init__(self, model, layer, channel=None, neuron=None, shortcut=False):
         self.model = model

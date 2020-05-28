@@ -49,6 +49,8 @@ def plot_top_losses(network, dataloader, loss_fn, *top_losses_out, device=None,
                     n=9, figsize=(10,10), gradcam=False, layer=0, show_image=True):
     """Plot the top losses that are returned by `top_losses()`
 
+    Inspired by fastai's plot_top_losses method.
+
     Parameters:
         network (nn.Module): The trained model.
         dataloader (DataLoader): Validation dataloader. Shuffle=False.
@@ -69,7 +71,7 @@ def plot_top_losses(network, dataloader, loss_fn, *top_losses_out, device=None,
     device = 'cuda' if torch.cuda.is_available() else 'cpu' if device is None else device
     network.eval().to(device)
 
-    if len(top_losses_out)!=4:
+    if len(top_losses_out) == 0:
         ps, ys, ls, idxs = top_losses(network, dataloader, loss_fn, device)
     else:
         ps, ys, ls, idxs = top_losses_out
