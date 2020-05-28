@@ -1,7 +1,7 @@
 import torch
 import matplotlib.pyplot as plt
 
-from ..utils import denorm
+from interpret.utils import denorm
 
 
 class Attribute():

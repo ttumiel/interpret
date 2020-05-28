@@ -1,10 +1,13 @@
 """Plot images"""
 
-from .utils import denorm
 from torchvision.utils import make_grid
 import matplotlib.pyplot as plt
 import numpy as np
 import math
+
+from interpret import denorm
+
+__all__ = ['show_images', 'plot', 'show_image']
 
 def show_image(tensor, normalize=False, ax=None, **kwargs):
     img = denorm(tensor, **kwargs) if normalize else np.array(tensor.clone())
@@ -13,7 +16,7 @@ def show_image(tensor, normalize=False, ax=None, **kwargs):
 def show_images(batched_tensor, normalize=False, figsize=(5,5), axis=False, labels=None, title=None, **kwargs):
     r = math.ceil(math.sqrt(batched_tensor.size(0)))
     f,axes = plt.subplots(r,r,figsize=figsize)
-    if title is not None: f.suptitle(title)
+    if title is not None: f.suptitle(title, weight='bold', fontsize=16)
     for i,ax in enumerate(axes.flatten()):
         if i<batched_tensor.size(0):
             show_image(batched_tensor[i],normalize,ax, **kwargs)

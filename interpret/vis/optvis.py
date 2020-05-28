@@ -6,12 +6,9 @@ import torchvision
 from PIL import Image
 from tqdm import tqdm
 
-from ..core import *
-from ..utils import *
-from ..transforms import *
-from ..utils import denorm
-from .objective import *
-from .param import *
+from interpret import *
+from interpret.transforms import *
+from interpret.vis import *
 
 VIS_TFMS = [
     RandomAffineTfm(scale, [0.9, 1.1]),

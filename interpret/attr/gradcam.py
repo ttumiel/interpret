@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 
-from ..hooks import *
-from .. import core
-from ..utils import denorm
-from .attribute import Attribute
+from interpret.hooks import *
+from interpret import core
+from interpret.utils import denorm
+from interpret.attr import Attribute
 
 class Gradcam(Attribute):
     """Generates a Grad-CAM attribution map for convolutional neural networks.

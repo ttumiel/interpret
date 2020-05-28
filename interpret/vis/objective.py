@@ -3,9 +3,9 @@
 import torch
 from torch import nn
 
-from ..hooks import Hook
-from ..core import *
-from ..imagenet import imagenet_stats, imagenet_labels
+from interpret.hooks import Hook
+from interpret.core import *
+from interpret.imagenet import imagenet_stats, imagenet_labels
 
 __all__ = ['Objective', 'LayerObjective', 'DeepDreamObjective']
 

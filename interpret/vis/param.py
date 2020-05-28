@@ -5,9 +5,10 @@ from torch.nn.parameter import Parameter
 from torch import nn
 from PIL import Image
 from torchvision.transforms import Resize
-from ..transforms import resize_norm_transform
-from ..utils import denorm, norm
-from ..imagenet import imagenet_stats
+
+from interpret.transforms import resize_norm_transform
+from interpret.utils import denorm, norm
+from interpret.imagenet import imagenet_stats
 
 __all__ = ['ImageParam', 'ImageFile']
 

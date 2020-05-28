@@ -3,7 +3,7 @@ from pathlib import Path
 from PIL import Image
 import numpy as np
 
-from .imagenet import imagenet_stats
+from interpret.imagenet import imagenet_stats
 
 __all__ = ['zoom', 'denorm', 'norm', 'get_layer_names']
 
