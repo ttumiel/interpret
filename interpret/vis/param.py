@@ -1,5 +1,5 @@
 "Parameterizations of images"
-import torch
+import torch, math
 import numpy as np
 from torch.nn.parameter import Parameter
 from torch import nn
@@ -9,8 +9,9 @@ from torchvision.transforms import Resize
 from interpret.transforms import resize_norm_transform
 from interpret.utils import denorm, norm
 from interpret.imagenet import imagenet_stats
+from interpret.models.cppn import CPPN
 
-__all__ = ['ImageParam', 'ImageFile']
+__all__ = ['ImageParam', 'ImageFile', 'CPPNParam']
 
 # Decorrelation code ported from Lucid: https://github.com/tensorflow/lucid
 color_correlation_svd_sqrt = np.asarray([[0.26, 0.09, 0.02],
@@ -133,3 +134,59 @@ class ImageFile(nn.Module):
     def _repr_html_(self):
         from IPython.display import display
         return display(denorm(self.image))
+
+
+class CPPNParam(nn.Module):
+    """CPPN image parameterisation. Generates infinite resolution images
+    using a CPPN. These images produce distinct images the resemble "light
+    paintings." This implementation is based off of tensorflow Lucid and [1].
+
+    Parameters:
+        size (int): the size of the input image.
+        batch (int): the batch size of the input.
+        symmetric (bool): set to return symmetric images.
+        device: torch.device
+        decorrelate (bool): colour decorrelate the input image.
+        sigmoid (bool): apply a sigmoid and normalize the input image.
+            Prevents unbounded growth on the input.
+
+    References:
+        [1] - Mordvintsev, et al., "Differentiable Image Parameterizations", Distill, 2018.
+    """
+    def __init__(self, size, batch=1, symmetric=False, device=None,
+                 decorrelate=True, sigmoid=True, **cppn_kwargs):
+        super().__init__()
+        device = 'cuda' if torch.cuda.is_available() else 'cpu' if device is None else device
+        r = math.sqrt(3.)
+        c = torch.linspace(-r, r, size)
+        if symmetric:
+            c = (c*c).sqrt()
+        gridx, gridy = torch.meshgrid(c, c)
+
+        self.size = size
+        self.inp = torch.stack([torch.stack([gridx, gridy])] * batch).to(device)
+        self.cppn = CPPN(**cppn_kwargs).to(device)
+        self.decorrelate = decorrelate
+        self.sigmoid = sigmoid
+
+        # Xavier init conv weights, zero biases
+        for m in self.cppn.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.xavier_normal_(m.weight)
+                nn.init.zeros_(m.bias)
+
+        # Zero init the last layer
+        nn.init.zeros_(self.cppn[-1].weight)
+        nn.init.zeros_(self.cppn[-1].bias)
+
+    def forward(self):
+        im = self.cppn(self.inp)
+
+        if self.decorrelate:
+            im = _linear_decorrelate_color(im)
+
+        if self.sigmoid:
+            im = torch.sigmoid(im)
+            im = norm(im, input_range=(0,1), unsqueeze=False, grad=False)
+
+        return im
