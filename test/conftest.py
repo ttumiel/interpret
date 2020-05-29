@@ -21,11 +21,11 @@ def imsize():
 
 @pytest.fixture(scope='session')
 def n_steps():
-    return (10,)
+    return (20,)
 
 @pytest.fixture
-def neuron():
-    return random.randrange(1000)
+def neuron(n_classes):
+    return random.randrange(n_classes)
 
 @pytest.fixture
 def channel():
