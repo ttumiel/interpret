@@ -194,3 +194,31 @@ class RandomEvery():
             if random.random() < self.p:
                 x = t(x)
         return x
+
+class Pad():
+    def __init__(self, padding, mode='reflect', **kwargs):
+        p = [padding]*4 if isinstance(padding, (float, int)) else padding
+        self.pad = partial(nn.functional.pad, pad=p, mode=mode, **kwargs)
+
+    def __call__(self, x):
+        return self.pad(x)
+
+
+class Roll():
+    def __init__(self, x, y):
+        """Roll the input Tensor by x along dim 3 and y along dim 2.
+
+        This transform is also called 'jitter' in some work [1].
+
+        Parameters:
+            x (int): the amount to roll in the x direction.
+            y (int): the amount to roll in the y direction.
+
+        References:
+            [1] - https://github.com/google/deepdream
+        """
+        self.x = int(x)
+        self.y = int(y)
+
+    def __call__(self, x):
+        return torch.roll(x, (self.y, self.x), dims=(2,3))
