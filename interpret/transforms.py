@@ -131,11 +131,11 @@ def affine(mat):
     def inner(x):
         if x.dim() == 3: x=x.unsqueeze(0)
         grid = affine_grid(mat, x.size(), align_corners=False)
-        rot_im = grid_sample(x, grid, padding_mode="reflection", align_corners=False)
-        return rot_im
+        im = grid_sample(x, grid, padding_mode="reflection", align_corners=False)
+        return im
     return inner
 
-def rotate(angle=20):
+def rotate(angle):
     "rotates the image in degrees"
     rad = math.pi*angle/180
     rot = torch.tensor([[math.cos(rad), -math.sin(rad), 0],
@@ -152,24 +152,24 @@ def translate(x,y):
     rot = rot.to('cuda' if torch.cuda.is_available() else 'cpu')
     return affine(rot)
 
-def shear(shear):
+def shear(shear_amount):
     "shears the image"
-    rot = torch.tensor([[1, shear, 0],
+    rot = torch.tensor([[1, shear_amount, 0],
                         [0, 1, 0],
                         ], dtype=torch.float32).unsqueeze(0)
     rot = rot.to('cuda' if torch.cuda.is_available() else 'cpu')
     return affine(rot)
 
-def scale(scale):
+def scale(scale_amount):
     "scales the image"
     mat = torch.tensor([[1, 0, 0],
                         [0, 1, 0],
-                        ], dtype=torch.float32).unsqueeze(0)/scale
+                        ], dtype=torch.float32).unsqueeze(0)/scale_amount
     mat = mat.to('cuda' if torch.cuda.is_available() else 'cpu')
     return affine(mat)
 
-class RandomAffineTfm():
-    "Randomly apply an affine transform on a tensor."
+class RandomTransform():
+    "Randomly apply a transform on a tensor."
     def __init__(self, tfm, *args, p=0.5):
         self.tfm = tfm
         self.args = args
@@ -177,8 +177,12 @@ class RandomAffineTfm():
 
     def __call__(self, x):
         if random.random()<self.p:
-            return self.tfm(*[random.random()*(a[1]-a[0])+a[0] if isinstance(a, list) else random.random()*a*2-a for a in self.args])(x)
+            return self.tfm(*_random_params(*self.args))(x)
         return x
+
+def _random_params(*args):
+    "Randomizes arguments between a min and max or between [-val, val]"
+    return [random.random()*(a[1]-a[0])+a[0] if isinstance(a, (tuple,list)) else random.random()*a*2-a for a in args]
 
 class RandomEvery():
     def __init__(self, tfms, p=0.5):
