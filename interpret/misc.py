@@ -99,7 +99,7 @@ def plot_top_losses(network, dataloader, loss_fn, *top_losses_out, device=None,
     else:
         show_images(ims, normalize=True, figsize=figsize, labels=labels, title=title)
 
-    return p,y,l,idxs
+    return ps,ys,ls,idxs
 
 
 def confusion_matrix(network, dataloader, num_classes, device=None):
