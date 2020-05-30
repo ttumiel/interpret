@@ -2,6 +2,7 @@
 
 import torch
 from torch import nn
+from functools import partial
 
 from interpret.hooks import Hook
 from interpret.core import *
@@ -156,9 +157,13 @@ class DeepDreamObjective(Objective):
 
         return self.loss
 
-class TotalVariation(Objective):
-    """Calculates the total variation of an input image"""
-    def objective_function(self, x):
+
+@partial(Objective, name='TotalVariation')
+def total_variation(x):
+    """Calculates the total variation of neighbouring pixels of an input image
+
+    Usually used as a penalty to reduce noise. A coefficient of around 1e-5 works well.
+    """
         width_sum = torch.sum(torch.abs(x[...,1:] - x[..., :-1]))
         height_sum = torch.sum(torch.abs(x[...,1:,:] - x[...,:-1,:]))
         return width_sum + height_sum
