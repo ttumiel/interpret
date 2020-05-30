@@ -2,10 +2,15 @@ import torchvision, torch
 import random, pytest
 
 @pytest.fixture(scope='session')
-def network():
-    return torchvision.models.vgg11(pretrained=False).to(
+def network(n_classes):
+    return torchvision.models.vgg11(pretrained=False, num_classes=n_classes).to(
         "cuda" if torch.cuda.is_available() else "cpu"
     )
+
+
+@pytest.fixture(scope='session')
+def n_classes():
+    return 5
 
 @pytest.fixture(scope='session')
 def conv_layer():

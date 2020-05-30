@@ -10,9 +10,9 @@ def test_neuron(network, imsize, linear_layer, neuron, n_steps):
     optvis = OptVis.from_layer(network, linear_layer, neuron=neuron)
     assert_loss_decreases(optvis, thresh=n_steps)
 
-def test_neuron_fail(network, linear_layer, channel):
+def test_neuron_fail(network, linear_layer, channel, n_classes):
     with pytest.raises(AssertionError):
-        optvis = OptVis.from_layer(network, linear_layer, channel=channel, neuron=6)
+        optvis = OptVis.from_layer(network, linear_layer, channel=channel, neuron=n_classes-1)
         optvis.vis(verbose=False)
 
 def test_channel(network, imsize, conv_layer, channel, n_steps):
