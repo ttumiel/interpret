@@ -25,6 +25,8 @@ class Blur(nn.Module):
             return self.filter(x).squeeze()
         return self.filter(x)
 
+RandomBlur = lambda *args,p=0.5: RandomTransform(Blur, *args, p=p)
+
 class GaussianBlur(nn.Module):
     """
     Apply a blur to an input with a Gaussian kernel.
@@ -70,6 +72,9 @@ class GaussianBlur(nn.Module):
             x.unsqueeze_(0)
             return self.conv(x).squeeze()
         return self.conv(x)
+
+RandomGaussianBlur = lambda *args,p=0.5: RandomTransform(GaussianBlur, *args, p=p)
+
 
 class ReducingGaussianBlur(GaussianBlur):
     "Dynamically reduce the sigma value after applying every blur."
@@ -147,6 +152,9 @@ def rotate(angle):
     rot = rot.to('cuda' if torch.cuda.is_available() else 'cpu')
     return affine(rot)
 
+RandomRotate = lambda angle,p=0.5: RandomTransform(rotate, angle, p=p)
+
+
 def translate(x,y):
     "translates the center of image to the coordinate x,y"
     rot = torch.tensor([[1, 0, -x],
@@ -154,6 +162,9 @@ def translate(x,y):
                         ], dtype=torch.float32).unsqueeze(0)
     rot = rot.to('cuda' if torch.cuda.is_available() else 'cpu')
     return affine(rot)
+
+RandomTranslate = lambda x,y,p=0.5: RandomTransform(translate, x, y, p=p)
+
 
 def shear(shear_amount):
     "shears the image"
@@ -163,6 +174,9 @@ def shear(shear_amount):
     rot = rot.to('cuda' if torch.cuda.is_available() else 'cpu')
     return affine(rot)
 
+RandomShear = lambda shear_amount,p=0.5: RandomTransform(shear, shear_amount, p=p)
+
+
 def scale(scale_amount):
     "scales the image"
     mat = torch.tensor([[1, 0, 0],
@@ -170,6 +184,9 @@ def scale(scale_amount):
                         ], dtype=torch.float32).unsqueeze(0)/scale_amount
     mat = mat.to('cuda' if torch.cuda.is_available() else 'cpu')
     return affine(mat)
+
+RandomScale = lambda scale_amount,p=0.5: RandomTransform(scale, scale_amount, p=p)
+
 
 class RandomTransform():
     "Randomly apply a transform on a tensor."
@@ -206,6 +223,8 @@ class Pad():
     def __call__(self, x):
         return self.pad(x)
 
+RandomPad = lambda *args,p=0.5: RandomTransform(Pad, *args, p=p)
+
 
 class Roll():
     def __init__(self, x, y):
@@ -225,3 +244,6 @@ class Roll():
 
     def __call__(self, x):
         return torch.roll(x, (self.y, self.x), dims=(2,3))
+
+RandomRoll = lambda x,y,p=0.5: RandomTransform(Roll, x, y, p=p)
+
