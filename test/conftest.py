@@ -2,11 +2,17 @@ import torchvision, torch
 import random, pytest
 
 @pytest.fixture(scope='session')
-def network(n_classes):
-    return torchvision.models.vgg11(pretrained=False, num_classes=n_classes).to(
-        "cuda" if torch.cuda.is_available() else "cpu"
-    )
+def network(n_classes, device):
+    return torchvision.models.resnet18(pretrained=False, num_classes=n_classes).to(device)
 
+@pytest.fixture(scope='session')
+def device():
+    return "cuda" if torch.cuda.is_available() else "cpu"
+
+@pytest.fixture(scope='session')
+def dataloader():
+    ds = FakeDataset(n=10, ins=torch.randn, outs=torch.zeros(10, dtype=torch.long))
+    return torch.utils.data.DataLoader(ds, 5)
 
 @pytest.fixture(scope='session')
 def n_classes():
@@ -14,11 +20,11 @@ def n_classes():
 
 @pytest.fixture(scope='session')
 def conv_layer():
-    return 'features/18'
+    return 'layer3/1/conv2'
 
 @pytest.fixture(scope='session')
 def linear_layer():
-    return 'classifier/6'
+    return 'fc'
 
 @pytest.fixture(scope='session')
 def imsize():
@@ -26,7 +32,7 @@ def imsize():
 
 @pytest.fixture(scope='session')
 def n_steps():
-    return (20,)
+    return (30,)
 
 @pytest.fixture
 def neuron(n_classes):
@@ -34,8 +40,26 @@ def neuron(n_classes):
 
 @pytest.fixture
 def channel():
-    return random.randrange(512)
+    return random.randrange(256)
 
 @pytest.fixture
 def channels():
-    return (random.randrange(512), random.randrange(512))
+    return (random.randrange(256), random.randrange(256))
+
+
+class FakeDataset():
+    """A fake dataset for testing.
+
+    Parameters:
+        n (int): the number of items in the ds.
+        ins (function): the function generating the input.
+        outs (list): a list of outputs of len n.
+    """
+    def __init__(self, n, ins, outs):
+        self.n = n
+        self.outs = outs
+        self.ins = ins(n,3,64,64)
+    def __len__(self):
+        return self.n
+    def __getitem__(self, idx):
+        return self.ins[idx], self.outs[idx]
