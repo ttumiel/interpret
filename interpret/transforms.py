@@ -247,3 +247,11 @@ class Roll():
 
 RandomRoll = lambda x,y,p=0.5: RandomTransform(Roll, x, y, p=p)
 
+VIS_TFMS = [
+    Pad(12),
+    RandomRoll(8,8),
+    RandomScale([0.9, 1.1], p=1),
+    RandomRotate(10, p=1),
+    RandomRoll(4,4),
+]
+

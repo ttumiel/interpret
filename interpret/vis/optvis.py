@@ -7,13 +7,9 @@ from PIL import Image
 from tqdm import tqdm
 
 from interpret import *
-from interpret.transforms import *
+from interpret.transforms import VIS_TFMS
 from interpret.vis import *
 
-VIS_TFMS = [
-    RandomAffineTfm(scale, [0.9, 1.1]),
-    RandomAffineTfm(rotate, 10),
-]
 
 class OptVis():
     """
@@ -42,7 +38,7 @@ class OptVis():
         self.grad_tfms = grad_tfms
         self.optim_fn = optim
         self.upsample = True
-        print(f"Optimising for {objective}")
+        tqdm.write(f"Optimising for {objective}")
 
     def vis(self, img_param=None, thresh=(500,), transform=True, lr=0.05, wd=0., verbose=True):
         """
@@ -97,7 +93,7 @@ class OptVis():
             self.optim.zero_grad()
 
             if verbose and i in thresh:
-                print(i, loss.item())
+                tqdm.write(f"{i}: {loss.item()}")
                 display(denorm(img_param()))
 
         return img_param
