@@ -3,7 +3,7 @@ import torch
 from PIL import Image
 import numpy as np
 
-from interpret.transforms import scale, translate, shear, rotate
+from interpret.transforms import scale, translate, shear, rotate, RandomTransform, _random_params
 
 @pytest.fixture(scope='module')
 def tensor():
@@ -42,3 +42,21 @@ def test_shear(tensor):
     out[...,0,1] = (out[...,0,0]+out[...,0,1])/2
     out[...,1,0] = (out[...,1,0]+out[...,1,1])/2
     assert torch.all(out == shear_1)
+
+def test_random_transform():
+    def raise_call():
+        raise RuntimeError('This transform should not have run but did.')
+    t = RandomTransform(raise_call, p=0)
+    for _ in range(10):
+        t(None)
+
+def test_random_params():
+    for _ in range(10):
+        out = _random_params(1,2)
+        assert -1 <= out[0] <= 1
+        assert -2 <= out[1] <= 2
+
+        out = _random_params([0,2],[-1,4])
+        assert 0 <= out[0] <= 2
+        assert -1 <= out[1] <= 4
+
