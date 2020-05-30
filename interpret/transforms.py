@@ -5,25 +5,27 @@ import random, math
 from torch.nn.functional import affine_grid, grid_sample
 from torch.nn import functional as F
 from PIL import Image
-from .imagenet import imagenet_stats
+from functools import partial
 
-class Blur():
+from interpret.imagenet import imagenet_stats
+
+class Blur(nn.Module):
     "Apply a uniform blur to an input with kernel_size"
-    def __init__(self, kernel_size):
-        channels=3
-        self.filter = nn.Conv2d(channels,channels,kernel_size, bias=False, groups=channels)
+    def __init__(self, kernel_size, channels=3):
+        super().__init__()
+        self.filter = nn.Conv2d(channels, channels, kernel_size, padding=kernel_size//2, bias=False, groups=channels)
         kernel = torch.ones((channels,1,kernel_size,kernel_size))/(kernel_size*kernel_size)
 
         self.filter.weight.data = kernel
         self.filter.weight.requires_grad_(False)
 
-    def __call__(self, x):
+    def forward(self, x):
         if x.dim() == 3:
             x.unsqueeze_(0)
             return self.filter(x).squeeze()
         return self.filter(x)
 
-class GaussianBlur():
+class GaussianBlur(nn.Module):
     """
     Apply a blur to an input with a Gaussian kernel.
 
@@ -34,13 +36,14 @@ class GaussianBlur():
     sigma << 1 will create a very focused kernel (less blurring).
     """
     def __init__(self, channels, kernel_size, sigma, dim=2, device='cuda' if torch.cuda.is_available() else 'cpu'):
+        super().__init__()
         self.channels, self.kernel_size, self.sigma = channels, kernel_size, sigma
         self.get_kernel(self.channels, self.kernel_size, self.sigma, dim=2)
         self.conv = nn.Conv2d(channels, channels, kernel_size, groups=channels, bias=False, padding=kernel_size//2)
         self.conv.weight.data = self.kernel
         self.conv.weight.requires_grad_(False)
         self.conv.to(device)
-        self.device = device
+        # self.device = device
 
     def get_kernel(self, channels, kernel_size, sigma, dim=2):
         kernel = 1
@@ -62,7 +65,7 @@ class GaussianBlur():
         kernel = kernel.view(1, 1, *kernel.size())
         self.kernel = kernel.repeat(channels, *[1] * (kernel.dim() - 1))
 
-    def __call__(self, x):
+    def forward(self, x):
         if x.dim() == 3:
             x.unsqueeze_(0)
             return self.conv(x).squeeze()
@@ -70,13 +73,13 @@ class GaussianBlur():
 
 class ReducingGaussianBlur(GaussianBlur):
     "Dynamically reduce the sigma value after applying every blur."
-    def __call__(self, x):
-        self.sigma *= 0.95
+    def forward(self, x):
+        self.sigma = max(0.95*self.sigma, 1e-3)
         self.get_kernel(self.channels, self.kernel_size, self.sigma)
         self.conv.weight.data = self.kernel
         self.conv.weight.requires_grad_(False)
         self.conv.to(self.device)
-        return super().__call__(x)
+        return super()(x)
 
 def get_transforms(size, mean=imagenet_stats[0], std=imagenet_stats[1], rotate=10,
                     flip_hor=True, flip_vert=False, perspective=True, color_jitter=True,
