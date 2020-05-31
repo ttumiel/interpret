@@ -4,7 +4,7 @@ from . import assert_loss_decreases
 
 
 def test_image_params(network, imsize, conv_layer, channel, n_steps):
-    optvis = OptVis.from_layer(network, conv_layer, channel=channel, neuron=6)
+    optvis = OptVis.from_layer(network, conv_layer, channel=channel)
 
     # with fft and decorrelate
     img_param = ImageParam(imsize, fft=True, decorrelate=True)

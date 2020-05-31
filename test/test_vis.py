@@ -23,6 +23,6 @@ def test_shortcut(network, imsize, conv_layer, channel, n_steps):
     def was_called(m,i,o):
         raise Exception
 
-    with Hook(network[1], was_called):
+    with Hook(network['layer4/0/conv1'], was_called):
         optvis = OptVis.from_layer(network, conv_layer, channel=channel, neuron=6, shortcut=True)
         assert_loss_decreases(optvis, thresh=n_steps)
