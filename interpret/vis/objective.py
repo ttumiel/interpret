@@ -85,13 +85,15 @@ class LayerObjective(Objective):
         neuron (int): the neuron to optimise. (optional)
         shortcut (bool): Whether to attempt to shortcut the network's
             computation. Only works for Sequential type models.
+        batchwise (bool): Calculate the loss for each element in the batch.
     """
-    def __init__(self, model, layer, channel=None, neuron=None, shortcut=False):
+    def __init__(self, model, layer, channel=None, neuron=None, shortcut=False, batchwise=False):
         self.model = model
         self.layer = layer
         self.channel = channel
         self.neuron = neuron
         self.shortcut = shortcut
+        self.batchwise = batchwise
         if self.shortcut:
             self.active = False
 
@@ -106,11 +108,14 @@ class LayerObjective(Objective):
             rank = len(output.shape)
             c = self.channel or slice(None)
             n = self.neuron or slice(None)
+            offset = ((0 if self.channel is None else self.channel)
+                      + (0 if self.neuron is None else self.neuron*2))
+            dims = list(range(1,rank - offset)) if self.batchwise else []
 
             if rank == 4:
-                self.loss = -torch.mean(output[:, c, n, n])
+                self.loss = -torch.mean(output[:, c, n, n], dim=dims)
             elif rank == 2:
-                self.loss = -torch.mean(output[:, n])
+                self.loss = -torch.mean(output[:, n], dim=dims)
                 assert self.channel is None, f"Channel is unused for layer {self.layer}"
 
             # Set flag for shortcutting the computation
