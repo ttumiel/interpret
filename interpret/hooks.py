@@ -39,11 +39,20 @@ class Hook():
     def __exit__(self, *args):
         self.remove()
 
-def _hook_inner(m,i,o):
+    def __del__(self):
+        self.remove()
+
+def _hook_output(m,i,o):
     return o if isinstance(o,torch.Tensor) else o if is_listy(o) else list(o)
 
 def hook_output(model, detach=True, grad=False, clone=False):
-    return Hook(model, _hook_inner, detach=detach, is_forward=not grad, clone=clone)
+    return Hook(model, _hook_output, detach=detach, is_forward=not grad, clone=clone)
+
+def _hook_input(m,i,o):
+    return o if isinstance(o,torch.Tensor) else o if is_listy(o) else list(o)
+
+def hook_input(model, detach=True, grad=False, clone=False):
+    return Hook(model, _hook_input, detach=detach, is_forward=not grad, clone=clone)
 
 def is_listy(obj):
     return isinstance(obj, (list, tuple))
