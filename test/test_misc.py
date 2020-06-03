@@ -1,7 +1,9 @@
 import torch
 from torch import nn
 
-from interpret import top_losses, confusion_matrix, plot_top_losses, plot_confusion_matrix
+from interpret import (top_losses, confusion_matrix,
+    plot_top_losses, plot_confusion_matrix,
+    get_dataset_examples, plot_dataset_examples)
 
 class DeterministicNetwork(nn.Module):
     "A fake module that returns what you give it sequentially."
@@ -52,3 +54,12 @@ def test_confusion_matrix(network, dataloader, n_classes, device):
     fake_net = DeterministicNetwork(tgts, device)
     cm = confusion_matrix(fake_net, dataloader, n_classes)
     assert cm.diagonal().sum() == len(dataloader.dataset)
+
+
+def test_dataset_examples(network, dataloader, device, conv_layer, channel):
+    idxs = get_dataset_examples(network, dataloader, conv_layer, channel, device)
+    assert len(idxs) == len(dataloader.dataset)
+    assert idxs.min()>=0 and idxs.max()<len(dataloader.dataset)
+
+    plot_dataset_examples(2, dataloader, idxs=idxs)
+    plot_dataset_examples(2, dataloader, network=network, layer=conv_layer, channel=channel)
