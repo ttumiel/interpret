@@ -108,8 +108,8 @@ class LayerObjective(Objective):
             rank = len(output.shape)
             c = self.channel or slice(None)
             n = self.neuron or slice(None)
-            offset = ((0 if self.channel is None else self.channel)
-                      + (0 if self.neuron is None else self.neuron*2))
+            offset = ((0 if self.channel is None else 1)
+                      + (0 if self.neuron is None else 2))
             dims = list(range(1,rank - offset)) if self.batchwise else []
 
             if rank == 4:
