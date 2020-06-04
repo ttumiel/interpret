@@ -1,13 +1,13 @@
-<h1 style="text-align:center">
-PyTorch Interpret
-</h1>
+<div align="center">
+<h1>PyTorch Interpret</h1>
+</div>
 
 A simple to use PyTorch library for interpreting your deep learning results, using both visualisations and attributions. Inspired by [TensorFlow Lucid](https://github.com/tensorflow/lucid).
 
 [![Build Status](https://travis-ci.org/ttumiel/interpret.svg?branch=master)](https://travis-ci.org/ttumiel/interpret)
 [![Coverage Status](https://coveralls.io/repos/github/ttumiel/interpret/badge.svg?branch=master)](https://coveralls.io/github/ttumiel/interpret?branch=master)
 
-
+<br/>
 
 ## Installation
 
@@ -127,9 +127,11 @@ The deep dream objective optimises for "interestingness" across an entire layer.
 
 ![Deep dream objective visualisations](./images/dream.jpg)
 
-
+<br/>
 
 ## Attribution
+
+![Attribution methods show where a neural network is looking when it makes a certain prediction.](./images/attr.jpg)
 
 Network attribution is done by feeding a particular input into the trained network and generating a saliency map that shows the parts of the image that the network activates highly on.
 
