@@ -51,10 +51,12 @@ Introduction to `interpret` | [![Open In Colab](https://colab.research.google.co
 Visualisation Tutorial | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ttumiel/interpret/blob/master/nbs/Visualisation-Tutorial.ipynb)
 
 
+<br/>
+<div align="center">
+<h2 id='visualisation'>Visualisation</h2>
+</div>
 
 ![Channel visualisations using pytorch interpret.](./images/collage-vis.jpg)
-
-## Visualisation
 
 Visualisation is a technique that generates inputs that optimise a particular objective within a trained network. By using visualisations, we can understand what it is that a network is looking for. For an in-depth explanation of visualisation, see [Feature Visualisation](https://distill.pub/2017/feature-visualization/).
 
@@ -128,8 +130,9 @@ The deep dream objective optimises for "interestingness" across an entire layer.
 ![Deep dream objective visualisations](./images/dream.jpg)
 
 <br/>
-
-## Attribution
+<div align="center">
+<h2 id='attribution'>Attribution</h2>
+</div>
 
 ![Attribution methods show where a neural network is looking when it makes a certain prediction.](./images/attr.jpg)
 
