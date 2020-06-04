@@ -7,6 +7,12 @@ import numpy as np
 
 from interpret import show_images, Gradcam, LayerObjective
 
+__all__ = [
+    'top_losses', 'plot_top_losses',
+    'confusion_matrix', 'plot_confusion_matrix',
+    'get_dataset_examples', 'plot_dataset_examples'
+    ]
+
 def top_losses(network, dataloader, loss_fn, device=None):
     """Find the dataset examples that result in the largest loss.
 

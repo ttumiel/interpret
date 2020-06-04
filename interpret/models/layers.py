@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 
+__all__ = ['Lambda']
 
 class Lambda(nn.Module):
     def __init__(self, fn):

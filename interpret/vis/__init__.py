@@ -1,3 +1,3 @@
-from interpret.vis.param import *
-from interpret.vis.objective import *
-from interpret.vis.optvis import OptVis
+from .param import *
+from .objective import *
+from .optvis import OptVis

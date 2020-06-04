@@ -3,6 +3,8 @@ from torch import nn
 
 from interpret.models import Lambda
 
+__all__ = ['CPPN', 'composite_act', 'ReLUNormalized']
+
 def composite_act(x):
     x = torch.atan(x)
     return torch.cat([x/0.67, (x*x)/0.6], 1)
@@ -15,7 +17,7 @@ class CPPN(nn.Sequential):
     def __init__(self, cout=3, num_hidden=24, num_layers=8,
                  act=CompositeAct, normalize=False, ks=1):
         m = act(torch.randn(1,1,1,1)).shape[1]
-        net = [nn.Conv2d(2, num_hidden, ks, padding=ks//2), act]
+        net = [nn.Conv2d(2, num_hidden, 1), act]
         for _ in range(num_layers):
             net.append(nn.Conv2d(num_hidden*m, num_hidden, ks, padding=ks//2))
             if normalize:
