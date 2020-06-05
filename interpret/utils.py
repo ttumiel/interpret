@@ -94,7 +94,7 @@ def find_all(model, module_type, path=False, _upper_name=""):
     """
     matches = []
     pathnames = []
-    for pathname, m in module._modules.items():
+    for pathname, m in model._modules.items():
         if isinstance(m, module_type):
             matches += [m]
             if path:
