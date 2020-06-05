@@ -47,42 +47,65 @@ def norm(im, input_range=(0,255), mean=imagenet_stats[0], std=imagenet_stats[1],
     if grad: im.requires_grad_(True)
     return im
 
-def get_layer_names(m, upper_name='', _title=True):
-    "Recursively show a network's named layers"
-    name = ''
+def get_layer_names(module, display=True, names=None, upper_name='', _title=True):
+    """Recursively show a network's named layers
+
+    Parameters:
+        module (nn.Module): The pytorch module to display the submodule names.
+        display (bool): print out a table of the names with attempts at sizes.
+
+    Returns (List):
+        List of submodule names.
+    """
+    fstr = "{:^40} | {:^18} | {:^10} | {:^10}"
+    if names is None:
+        names = []
+
     if _title:
-        print("{:^30} | {:^18} | {:^10} | {:^10}".format("Layer", "Class Name", "Input Size", "Output Size"))
-        print(f"{'-'*30} | {'-'*18} | {'-'*10} | {'-'*10}")
+        print(fstr.format("Layer", "Class Name", "Input Size", "Output Size"))
+        print(f"{'-'*40} | {'-'*18} | {'-'*10} | {'-'*10}")
 
-    if type(m) == tuple:
-        name, m = m
+    for name, m in module._modules.items():
+        if m is not None:
+            if display:
+                print(fstr.format(
+                    upper_name+name,
+                    m.__name__,
+                    m.weight.size(1) if hasattr(m, 'weight') and len(m.weight.shape)>1 else '-',
+                    m.weight.size(0) if hasattr(m, 'weight') else '-'))
 
-    if hasattr(m, 'named_children') and len(list(m.named_children()))!=0:
-        for layer in m.named_children():
-            get_layer_names(layer, upper_name=upper_name+name+"/" if name != '' else upper_name, _title=False)
-    else:
-        print("{:^30} | {:^18} | {:^10} | {:^10}".format(
-                upper_name+name,
-                m.__class__.__name__,
-                m.weight.size(1) if hasattr(m, 'weight') and len(m.weight.shape)>1 else '-',
-                m.weight.size(0) if hasattr(m, 'weight') else '-'))
+            names.append(upper_name+name)
+            get_layer_names(m, display, names, upper_name+name+"/", False)
 
-def find_all(model, name, path=False, _upper_name=""):
+    return names
+
+def find_all(model, module_type, path=False, _upper_name=""):
+    """Find all Modules of a particular type in `model`.
+
+    Parameters:
+        model (nn.Module): the pytorch module to search through.
+        module_type (type): the instance type to match for. i.e.
+            matches `isinstance(m, module_type)`.
+        path (bool): return the path name that returns the found module.
+
+    Returns (List, [List]):
+        A list of the modules matchine module_type. Optionally includes
+        the paths from the root module to the found module.
+    """
     matches = []
     pathnames = []
-    if hasattr(model, "named_children") and len(list(model.named_children()))!=0:
-        for pathname, m in model.named_children():
-            if isinstance(m, name):
-                matches += [m]
-                if path:
-                    pathnames += [_upper_name + pathname]
+    for pathname, m in module._modules.items():
+        if isinstance(m, module_type):
+            matches += [m]
+            if path:
+                pathnames += [_upper_name + pathname]
+        else:
+            next_find = find_all(m, module_type, path=path, _upper_name=_upper_name+pathname + '/')
+            if path:
+                matches += next_find[0]
+                pathnames += next_find[1]
             else:
-                next_find = find_all(m, name, path=path, _upper_name=_upper_name+pathname + '/')
-                if path:
-                    matches += next_find[0]
-                    pathnames += next_find[1]
-                else:
-                    matches += next_find
+                matches += next_find
     if path:
         return matches, pathnames
     return matches
