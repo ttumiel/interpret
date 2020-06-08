@@ -6,17 +6,10 @@ import torchvision
 from PIL import Image
 from tqdm import tqdm
 
-from ..core import *
-from ..utils import *
-from ..transforms import *
-from ..utils import denorm
-from .objective import *
-from .param import *
+from interpret import *
+from interpret.transforms import VIS_TFMS
+from interpret.vis import *
 
-VIS_TFMS = [
-    RandomAffineTfm(scale, [0.9, 1.1]),
-    RandomAffineTfm(rotate, 10),
-]
 
 class OptVis():
     """
@@ -31,15 +24,12 @@ class OptVis():
         tfms (list): list of transformations to potentially apply to image.
         grad_tfms (list): list of transformations to apply to the gradient of the image.
         optim (torch.optim): PyTorch optimisation function.
-        shortcut (bool): Attempt to shorten the computation by iterating through
-            the layers until the objective is reached as opposed to calling the
-            entire network. Only works on Sequential-like models.
 
     [1] - https://distill.pub/2017/feature-visualization/
     [2] - https://github.com/tensorflow/lucid
     """
 
-    def __init__(self, model, objective, transforms=None, optim=torch.optim.Adam, shortcut=False, device=None, grad_tfms=None):
+    def __init__(self, model, objective, transforms=None, optim=torch.optim.Adam, device=None, grad_tfms=None):
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu' if device is None else device
         self.model = model.to(self.device).eval()
         self.objective = objective
@@ -47,9 +37,8 @@ class OptVis():
         self.tfms = transforms if transforms is not None else VIS_TFMS.copy()
         self.grad_tfms = grad_tfms
         self.optim_fn = optim
-        self.shortcut = shortcut
         self.upsample = True
-        print(f"Optimising for {objective}")
+        tqdm.write(f"Optimising for {objective}")
 
     def vis(self, img_param=None, thresh=(500,), transform=True, lr=0.05, wd=0., verbose=True):
         """
@@ -64,6 +53,8 @@ class OptVis():
             wd (float): weight decay for self.optim_fn.
             verbose (bool): display input on thresholds.
         """
+        self.losses = []
+
         if verbose:
             try:
                 from IPython.display import display
@@ -91,6 +82,7 @@ class OptVis():
 
             loss = self.objective(img)
             loss.backward()
+            self.losses.append(loss.detach())
 
             # Apply transforms to the gradient (normalize, blur, etc.)
             if self.grad_tfms is not None:
@@ -101,7 +93,7 @@ class OptVis():
             self.optim.zero_grad()
 
             if verbose and i in thresh:
-                print(i, loss.item())
+                tqdm.write(f"{i}: {loss.item()}")
                 display(denorm(img_param()))
 
         return img_param

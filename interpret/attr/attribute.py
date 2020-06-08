@@ -1,7 +1,7 @@
 import torch
 import matplotlib.pyplot as plt
 
-from ..utils import denorm
+from interpret.utils import denorm
 
 
 class Attribute():
@@ -46,11 +46,11 @@ class Attribute():
         """Show the generated attribution map.
 
         Parameters:
-        show_image (bool): show the denormalised input image overlaid on the heatmap.
-        ax: axes on which to plot image.
-        colorbar (bool): show a colorbar.
-        cmap: matplotlib colourmap.
-        alpha (float): transparency value alpha for heatmap.
+            show_image (bool): show the denormalised input image overlaid on the heatmap.
+            ax: axes on which to plot image.
+            colorbar (bool): show a colorbar.
+            cmap: matplotlib colourmap.
+            alpha (float): transparency value alpha for heatmap.
         """
         if ax is None:
             _,ax = plt.subplots()

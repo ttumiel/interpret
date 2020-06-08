@@ -3,7 +3,7 @@ from pathlib import Path
 from PIL import Image
 import numpy as np
 
-from .imagenet import imagenet_stats
+from interpret.imagenet import imagenet_stats
 
 __all__ = ['zoom', 'denorm', 'norm', 'get_layer_names']
 
@@ -31,7 +31,7 @@ def denorm(im, mean=imagenet_stats[0], std=imagenet_stats[1], image=True):
 def norm(im, input_range=(0,255), mean=imagenet_stats[0], std=imagenet_stats[1], unsqueeze=True, grad=True):
     "Normalize an image"
     if isinstance(im, Image.Image):
-        im = torch.tensor(np.asarray(im)).permute(2,0,1).float()
+        im = torch.tensor(np.asarray(im).copy()).permute(2,0,1).float()
     elif isinstance(im, np.ndarray):
         im = torch.tensor(im).float()
         size = im.size()

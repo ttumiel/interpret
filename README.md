@@ -1,12 +1,13 @@
-# Interpretable Deep Learning
+<div align="center">
+<h1>PyTorch Interpret</h1>
+</div>
 
-![Class Visualisations](./class_vis.png)
-
-A simple to use PyTorch library for interpreting your deep learning results. Inspired by [TensorFlow Lucid](https://github.com/tensorflow/lucid).
+A simple to use PyTorch library for interpreting your deep learning results, using both visualisations and attributions. Inspired by [TensorFlow Lucid](https://github.com/tensorflow/lucid).
 
 [![Build Status](https://travis-ci.org/ttumiel/interpret.svg?branch=master)](https://travis-ci.org/ttumiel/interpret)
 [![Coverage Status](https://coveralls.io/repos/github/ttumiel/interpret/badge.svg?branch=master)](https://coveralls.io/github/ttumiel/interpret?branch=master)
 
+<br/>
 
 ## Installation
 
@@ -26,6 +27,20 @@ pip install git+https://github.com/ttumiel/interpret
 
 `interpret` requires a working installation of PyTorch.
 
+
+
+## Contents
+
+- [Tutorials](#tutorials)
+- [Visualisation](#visualisation)
+  - [Quickstart](#vis-quickstart)
+  - [Parameterisations](#parameterisations)
+  - [Objectives](#objectives)
+- [Attribution](#attribution)
+  - [Quickstart](#attr-quickstart)
+
+
+
 ## Tutorials
 
 Run the tutorials in the browser using Google Colab.
@@ -35,14 +50,23 @@ Tutorial | Link
 Introduction to `interpret` | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ttumiel/interpret/blob/master/nbs/Interpret-Intro.ipynb)
 Visualisation Tutorial | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ttumiel/interpret/blob/master/nbs/Visualisation-Tutorial.ipynb)
 
-## Usage
 
-`interpret` can be used for both visualisation and attribution. Here an example using a pretrained network is shown.
+<br/>
+<div align="center">
+<h2 id='visualisation'>Visualisation</h2>
+</div>
 
-### Visualisation
+![Channel visualisations using pytorch interpret.](./images/collage-vis.jpg)
+
+Visualisation is a technique that generates inputs that optimise a particular objective within a trained network. By using visualisations, we can understand what it is that a network is looking for. For an in-depth explanation of visualisation, see [Feature Visualisation](https://distill.pub/2017/feature-visualization/).
+
+<h3 id="vis-quickstart">Quickstart</h3>
+
+Generating visualisations is done by loading a trained network, selecting to objective to optimise for and running the optimisation. An example using a pretrained network from `torchvision` is shown.
+
 
 ```python
-from interpret import OptVis, denorm
+from interpret import OptVis
 import torchvision
 
 # Get the PyTorch neural network
@@ -60,7 +84,61 @@ optvis = OptVis.from_layer(network, layer=layer, channel=channel)
 optvis.vis()
 ```
 
-### Attribution
+### Parameterisations
+
+Images can be parameterised in several different ways. As long as the parameterisation is differentiable, the input can be optimised for a particular layer. For code examples, see the [Visualisation Tutorial Notebook](#tutorials).
+
+The default parameterisation is in spatial and colour decorrelated space.
+
+![Decorrelated visualisations](./images/channel.jpg)
+
+We can also parameterise in regular pixel space but the visualisations tend to be worse.
+
+![Pixel space parameterised visualisations](./images/pixels.jpg)
+
+Another parameterisation is a compositional pattern producing network (CPPN) which can generate infinite resolution images that have the effect of "light paintings."
+
+![CPPN visualisations](./images/cppn.jpg)
+
+
+### Objectives
+
+The objective on which to optimise can also be manipulated to create different visualisations. We can add objectives together to get compound objectives or negate them to get negative neurons. See the [Visualisation Tutorial Notebook](#tutorials) for examples.
+
+#### Layer Objective
+
+A LayerObjective can be created easily using the `from_layer` OptVis class method. In this function, we can choose the layer, channel and neuron to optimise for. Here we can optimise for a particular neuron:
+
+![Neuron visualisations](./images/neuron.jpg)
+
+We can also manually create two objectives and add them together to get a compound objective:
+
+![Compound activations between more than one objective](./images/compound.jpg)
+
+Or we can find the negated objective that minimises a particular neuron:
+
+![Negative neurons minimise a particular activation](./images/negatives.jpg)
+
+Layer objectives are fairly flexible. You can select any layer in the network and capture the output of that particular layer. We can visualise the last layer of the network, generating class visualisations of the different classes in ImageNet.
+
+![Class Visualisations](./images/class_vis.png)
+
+#### Deep Dream Objective
+
+The deep dream objective optimises for "interestingness" across an entire layer. We can create this objective from an input image and select a layer using the `from_dream` class method.
+
+![Deep dream objective visualisations](./images/dream.jpg)
+
+<br/>
+<div align="center">
+<h2 id='attribution'>Attribution</h2>
+</div>
+
+![Attribution methods show where a neural network is looking when it makes a certain prediction.](./images/attr.jpg)
+
+Network attribution is done by feeding a particular input into the trained network and generating a saliency map that shows the parts of the image that the network activates highly on.
+
+<h3 id="attr-quickstart">Quickstart</h3>
 
 ```python
 from interpret import Gradcam, norm

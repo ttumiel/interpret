@@ -2,10 +2,11 @@
 
 import torch
 from torch import nn
+from functools import partial
 
-from ..hooks import Hook
-from ..core import *
-from ..imagenet import imagenet_stats, imagenet_labels
+from interpret.hooks import Hook
+from interpret.core import *
+from interpret.imagenet import imagenet_stats, imagenet_labels
 
 __all__ = ['Objective', 'LayerObjective', 'DeepDreamObjective']
 
@@ -23,8 +24,8 @@ class Objective():
     def __init__(self, objective_function=None, name=None):
         """
         Parameters:
-        objective_function: function that returns the loss of the network.
-        name (str): name of the objective. Used for display. (optional)
+            objective_function: function that returns the loss of the network.
+            name (str): name of the objective. Used for display. (optional)
         """
         if objective_function is not None:
             self.objective_function = objective_function
@@ -42,17 +43,17 @@ class Objective():
 
     def __add__(self, other):
         if isinstance(other, (int,float)):
-            name = " + ".join([self.__repr__(), other.__repr__()])
+            name = " + ".join([repr(self), repr(other)])
             return Objective(lambda x: other + self(x), name=name)
         elif isinstance(other, Objective):
-            name = " + ".join([self.__repr__(), other.__repr__()])
+            name = " + ".join([repr(self), repr(other)])
             return Objective(lambda x: other(x) + self(x), name=name)
         else:
             raise TypeError(f"Can't add value of type {type(other)}")
 
     def __mul__(self, other):
         if isinstance(other, (int,float)):
-            name = f"{other}*{self.__repr__()}"
+            name = f"{other}*{repr(self)}"
             return Objective(lambda x: other * self(x), name=name)
         else:
             raise TypeError(f"Can't add value of type {type(other)}")
@@ -60,14 +61,17 @@ class Objective():
     def __sub__(self, other):
         return self + (-1*other)
 
+    def __rsub__(self, other):
+        return -1*self + other
+
     def __rmul__(self, other):
-        return self.__mul__(other)
+        return self * other
 
     def __radd__(self, other):
-        return self.__add__(other)
+        return self + other
 
     def __neg__(self):
-        return self.__mul__(-1.)
+        return -1. * self
 
 class LayerObjective(Objective):
     """Generate an Objective from a particular layer of a network.
@@ -75,19 +79,21 @@ class LayerObjective(Objective):
     options for selecting the channel or neuron of the layer.
 
     Parameters:
-    model (nn.Module): PyTorch model.
-    layer (str or int): the layer to optimise.
-    channel (int): the channel to optimise. (optional)
-    neuron (int): the neuron to optimise. (optional)
-    shortcut (bool): Whether to attempt to shortcut the network's
-        computation. Only works for Sequential type models.
+        model (nn.Module): PyTorch model.
+        layer (str or int): the layer to optimise.
+        channel (int): the channel to optimise. (optional)
+        neuron (int): the neuron to optimise. (optional)
+        shortcut (bool): Whether to attempt to shortcut the network's
+            computation. Only works for Sequential type models.
+        batchwise (bool): Calculate the loss for each element in the batch.
     """
-    def __init__(self, model, layer, channel=None, neuron=None, shortcut=False):
+    def __init__(self, model, layer, channel=None, neuron=None, shortcut=False, batchwise=False):
         self.model = model
         self.layer = layer
         self.channel = channel
         self.neuron = neuron
         self.shortcut = shortcut
+        self.batchwise = batchwise
         if self.shortcut:
             self.active = False
 
@@ -102,11 +108,14 @@ class LayerObjective(Objective):
             rank = len(output.shape)
             c = self.channel or slice(None)
             n = self.neuron or slice(None)
+            offset = ((0 if self.channel is None else 1)
+                      + (0 if self.neuron is None else 2))
+            dims = list(range(1,rank - offset)) if self.batchwise else []
 
             if rank == 4:
-                self.loss = -torch.mean(output[:, c, n, n])
+                self.loss = -torch.mean(output[:, c, n, n], dim=dims)
             elif rank == 2:
-                self.loss = -torch.mean(output[:, n])
+                self.loss = -torch.mean(output[:, n], dim=dims)
                 assert self.channel is None, f"Channel is unused for layer {self.layer}"
 
             # Set flag for shortcutting the computation
@@ -153,9 +162,13 @@ class DeepDreamObjective(Objective):
 
         return self.loss
 
-class TotalVariation(Objective):
-    """Calculates the total variation of an input image"""
-    def objective_function(self, x):
-        width_sum = torch.sum(torch.abs(x[...,1:] - x[..., :-1]))
-        height_sum = torch.sum(torch.abs(x[...,1:,:] - x[...,:-1,:]))
-        return width_sum + height_sum
+
+@partial(Objective, name='TotalVariation')
+def total_variation(x):
+    """Calculates the total variation of neighbouring pixels of an input image
+
+    Usually used as a penalty to reduce noise. A coefficient of around 1e-5 works well.
+    """
+    width_sum = torch.sum(torch.abs(x[...,1:] - x[..., :-1]))
+    height_sum = torch.sum(torch.abs(x[...,1:,:] - x[...,:-1,:]))
+    return width_sum + height_sum

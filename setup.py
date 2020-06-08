@@ -6,6 +6,7 @@ with open("README.md", "r") as f:
 test_deps = [
     'coverage',
     'pytest',
+    'scikit-learn'
 ]
 extras = {
     'test': test_deps,
@@ -18,7 +19,7 @@ setuptools.setup(
     description="Interpreting deep learning models in PyTorch.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/ttumiel/deep-interp",
+    url="https://github.com/ttumiel/interpret",
     packages=setuptools.find_packages(),
     install_requires=[
         'numpy',
