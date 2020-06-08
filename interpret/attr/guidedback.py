@@ -5,6 +5,7 @@ from ..utils import find_all
 # from ..hooks import hook_output
 from .attribute import Attribute
 from ..models.layers import Lambda
+from interpret.override import ModuleOverride
 
 # def guided_relu(module, input, output):
 #     "Apply relu to forward and backward pass."
@@ -55,22 +56,17 @@ class GuidedBackProp(Attribute):
         if self.input_data.grad is not None:
             self.input_data.grad.fill_(0)
 
-        _, relu_paths = find_all(m, nn.ReLU, path=True)
         relu_override = DeconvnetReLU.apply if deconvnet else GuidedReLU.apply
-        for p in relu_paths:
-            m[p] = Lambda(relu_override)
-        # hooks = [l.register_backward_hook(guided_relu) for l in relu_modules]
+        with ModuleOverride(m, nn.ReLU, Lambda(relu_override)):
+            # hooks = [l.register_backward_hook(guided_relu) for l in relu_modules]
 
-        # with hook_output(m) as h:
-        loss = m(input_img)[0, target_class]
+            # with hook_output(m) as h:
+            loss = m(input_img)[0, target_class]
 
-        loss.backward()
+            loss.backward()
 
-        self.data = input_img.grad.detach().clone().squeeze()
-        # input_img.grad.fill_(0)
+            self.data = input_img.grad.detach().clone().squeeze()
+            # input_img.grad.fill_(0)
 
-        # for h in hooks:
-        #     h.remove()
-
-        for p in relu_paths:
-            m[p] = nn.ReLU(True)
+            # for h in hooks:
+            #     h.remove()
