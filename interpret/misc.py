@@ -28,7 +28,7 @@ def top_losses(network, dataloader, loss_fn, device=None):
         and the indexes in the dataset.
     """
     _check_shuffle(dataloader)
-    device = 'cuda' if torch.cuda.is_available() else 'cpu' if device is None else device
+    device = ('cuda' if torch.cuda.is_available() else 'cpu') if device is None else device
     network.eval().to(device)
     if hasattr(loss_fn, 'reduction'):
         loss_fn.reduction = 'none'
@@ -77,7 +77,7 @@ def plot_top_losses(network, dataloader, loss_fn, *top_losses_out, device=None,
     Returns (Tensor, Tensor, Tensor, Tensor)
         The top n predictions, targets, losses and all ranked indexes.
     """
-    device = 'cuda' if torch.cuda.is_available() else 'cpu' if device is None else device
+    device = ('cuda' if torch.cuda.is_available() else 'cpu') if device is None else device
     network.eval().to(device)
 
     if len(top_losses_out) == 0:
@@ -196,7 +196,7 @@ def get_dataset_examples(network, dataloader, layer, channel=None, device=None, 
         The sorted indices of the items that most activate the layer.
     """
     _check_shuffle(dataloader)
-    device = 'cuda' if torch.cuda.is_available() else 'cpu' if device is None else device
+    device = ('cuda' if torch.cuda.is_available() else 'cpu') if device is None else device
     network.eval().to(device)
     obj = LayerObjective(network, layer, channel, batchwise=True, **layer_kwargs)
 

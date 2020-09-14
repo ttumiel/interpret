@@ -30,7 +30,7 @@ class OptVis():
     """
 
     def __init__(self, model, objective, transforms=None, optim=torch.optim.Adam, device=None, grad_tfms=None):
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu' if device is None else device
+        self.device = ('cuda' if torch.cuda.is_available() else 'cpu') if device is None else device
         self.model = model.to(self.device).eval()
         self.objective = objective
         self.active = False
