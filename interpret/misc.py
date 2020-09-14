@@ -27,6 +27,7 @@ def top_losses(network, dataloader, loss_fn, device=None):
         A tuple of the sorted predictions, targets, losses,
         and the indexes in the dataset.
     """
+    _check_shuffle(dataloader)
     device = 'cuda' if torch.cuda.is_available() else 'cpu' if device is None else device
     network.eval().to(device)
     if hasattr(loss_fn, 'reduction'):
@@ -194,6 +195,7 @@ def get_dataset_examples(network, dataloader, layer, channel=None, device=None, 
     Returns (Tensor):
         The sorted indices of the items that most activate the layer.
     """
+    _check_shuffle(dataloader)
     device = 'cuda' if torch.cuda.is_available() else 'cpu' if device is None else device
     network.eval().to(device)
     obj = LayerObjective(network, layer, channel, batchwise=True, **layer_kwargs)
@@ -220,3 +222,7 @@ def plot_dataset_examples(n, dataloader, denorm=True, network=None, layer=None, 
     ims = torch.stack(ims)
     show_images(ims, denorm, title=title, labels=labels)
     return idxs
+
+def _check_shuffle(dl):
+    assert not isinstance(dl.sampler, torch.utils.data.RandomSampler), \
+        "DataLoader should not be shuffled."
