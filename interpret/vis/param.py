@@ -156,7 +156,7 @@ class CPPNParam(nn.Module):
     def __init__(self, size, batch=1, symmetric=False, device=None,
                  decorrelate=True, sigmoid=True, **cppn_kwargs):
         super().__init__()
-        device = 'cuda' if torch.cuda.is_available() else 'cpu' if device is None else device
+        device = ('cuda' if torch.cuda.is_available() else 'cpu') if device is None else device
         r = math.sqrt(3.)
         c = torch.linspace(-r, r, size)
         if symmetric:

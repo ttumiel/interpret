@@ -45,34 +45,3 @@ class Gradcam(Attribute):
             raise ValueError("Image not large enough to create a heatmap. Increase "
                             "size of image or move the layer further down into the "
                             "network")
-
-
-def gradcam_from_examples(learn, n_examples, layer, figsize=(10,10), show_overlay=False, cmap='magma'):
-    "Utility method to generate a collage of attribution maps from a list of examples."
-    c = learn.data.dataset.c
-    ax = plt.subplots(n_examples,c + (2 if show_overlay else 1),figsize=figsize)[1]
-    for row in range(n_examples):
-        img, label = learn.val_data.dataset[np.random.randint(len(learn.val_data.dataset))]
-        img = img.to(learn.device)
-        ax[row][0].imshow(denorm(img))
-        if c>1:
-            pred = learn.predict((img[None], label))[0].argmax(1)
-        else:
-            pred = learn.predict((img[None], label))[0].round()
-        pred_str = learn.val_data.dataset.decode_label(pred.item())
-        label_str = learn.val_data.dataset.decode_label(label.item())
-        ax[row][0].set_title(f"Input Image.\nPrediction: {pred_str}.\nLabel: {label_str}.")
-        if show_overlay:
-            attr = Gradcam(learn.model, img[None], pred if pred<c else 0, layer=layer)
-            attr.show(show_image=True, ax=ax[row][1], cmap=cmap)
-            ax[row][1].set_title(f'Overlay of Predicted Class {int(pred.item())}')
-        for class_label in range(c):
-            attr = Gradcam(learn.model, img[None], class_label, layer=layer)
-            attr.show(show_image=False, ax=ax[row][class_label+(2 if show_overlay else 1)], cmap=cmap)
-            if c > 1:
-                ax[0][class_label + (2 if show_overlay else 1)].set_title(f"Looking for: {learn.val_data.dataset.decode_label(class_label)}")
-            else:
-                ax[0][class_label + (2 if show_overlay else 1)].set_title(f"Prediction")
-    ax=ax.flatten()
-    for i in range(len(ax)):
-        ax[i].set_axis_off()

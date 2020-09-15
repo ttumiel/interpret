@@ -1,8 +1,19 @@
 import pytest, torch
+from torch import nn
 import numpy as np
 from PIL import Image
 
-from interpret.utils import norm, denorm
+from interpret.utils import norm, denorm, get_layer_names, find_all
+
+@pytest.fixture(scope='module')
+def module():
+    return nn.Sequential(
+        nn.Linear(3,3),
+        nn.Sequential(
+            nn.Linear(3,3),
+            nn.Linear(3,3),
+        )
+    )
 
 def test_norm():
     data = (np.random.random((32,32,3))*255).astype('uint8')
@@ -27,3 +38,17 @@ def test_norm_denorm():
     denorm_data = denorm(data, image=False)
 
     assert np.isclose(np.array(img), denorm_data).all()
+
+def test_get_layer_names(module):
+    names = get_layer_names(module, display=False)
+    assert len(names) == 4
+
+def test_find_all(module):
+    ms = find_all(module, nn.Linear)
+    assert len(ms) == 3
+
+    ms = find_all(module, nn.Sequential)
+    assert len(ms) == 1
+
+    ms, path = find_all(module, nn.Linear, path=True)
+    assert all([ms[i] is module[p] for i,p in enumerate(path)])
