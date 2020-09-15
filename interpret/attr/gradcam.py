@@ -31,14 +31,15 @@ class Gradcam(Attribute):
         m = model.eval()
         cl = int(im_class)
         xb = img
+        m[layer].requires_grad_(True)
 
         with hook_output(m[layer]) as hook_a:
             with hook_output(m[layer], grad=True) as hook_g:
                 preds = m(xb)
                 preds[0,int(cl)].backward()
-        acts  = hook_a.stored[0].cpu()
+                acts = hook_a.stored[0].cpu()
+                grad = hook_g.stored[0][0].cpu()
         if (acts.shape[-1]*acts.shape[-2]) >= heatmap_thresh:
-            grad = hook_g.stored[0][0].cpu()
             grad_chan = grad.mean(1).mean(1)
             self.data = F.relu(((acts*grad_chan[...,None,None])).sum(0))
         else:
