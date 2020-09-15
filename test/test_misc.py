@@ -50,7 +50,7 @@ def test_confusion_matrix(network, dataloader, n_classes, device):
     plot_confusion_matrix(n_classes, network=network, dataloader=dataloader)
     plot_confusion_matrix(n_classes, cm=cm)
 
-    tgts = torch.cat([t for _,t in dataloader])
+    tgts = torch.cat([t for _,t in dataloader]).float()
     fake_net = DeterministicNetwork(tgts, device)
     cm = confusion_matrix(fake_net, dataloader, n_classes)
     assert cm.diagonal().sum() == len(dataloader.dataset)
