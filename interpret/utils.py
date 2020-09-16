@@ -70,7 +70,7 @@ def get_layer_names(module, display=True, names=None, upper_name='', _title=True
             if display:
                 print(fstr.format(
                     upper_name+name,
-                    m.__name__,
+                    m.__class__.__name__,
                     m.weight.size(1) if hasattr(m, 'weight') and len(m.weight.shape)>1 else '-',
                     m.weight.size(0) if hasattr(m, 'weight') else '-'))
 
