@@ -38,6 +38,10 @@ pip install git+https://github.com/ttumiel/interpret
   - [Objectives](#objectives)
 - [Attribution](#attribution)
   - [Quickstart](#attr-quickstart)
+- [Miscellaneous Interpretations](#miscellaneous-interpretations)
+  - [Plot Top Losses](#plot-top-losses)
+  - [Plot Confusion Matrix](#plot-confusion-matrix)
+  - [Plot Dataset Examples](#plot-dataset-examples)
 
 
 
@@ -62,7 +66,7 @@ Visualisation is a technique that generates inputs that optimise a particular ob
 
 <h3 id="vis-quickstart">Quickstart</h3>
 
-Generating visualisations is done by loading a trained network, selecting to objective to optimise for and running the optimisation. An example using a pretrained network from `torchvision` is shown.
+Generating visualisations is done by loading a trained network, selecting the objective to optimise for and running the optimisation. An example using a pretrained network from `torchvision` is shown.
 
 
 ```python
@@ -161,3 +165,26 @@ layer = 'features/20'
 saliency_map = Gradcam(network, input_data, im_class=class_number, layer=layer)
 saliency_map.show()
 ```
+
+## Miscellaneous Interpretations
+
+Included in `interpret` are a few additional interpretation methods that don't neatly fit into visualisation or attribution methods.
+
+### Plot Top Losses
+
+Plot the inputs that result in the largest loss. Useful for identifying where your network is most unsure or where the inputs actually don't fit the label given (a mislabelled image). You can also enable a Grad-CAM attribution overlay for each image so that you can tell where the network is looking.
+
+<img src="./images/top_losses.png" alt="Top losses plotted with Grad-CAM attribution overlay." width="500px"/>
+
+### Plot Confusion Matrix
+
+Plot a confusion matrix for a multi-class classification or binned regression objective.
+
+![Confusion matrix on 10 classes](./images/confusion_mat.png)
+
+### Plot Dataset Examples
+
+Plot some dataset examples that maximise a particular `LayerObjective` from the visualisation objectives described above. Useful for identifying clear examples of what the network is looking for in a particular visualisation using real examples.
+
+![Comparison between a layer visualisation and dataset examples that also activate the same layer.](./images/dataset_examples.jpg)
+
