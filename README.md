@@ -38,7 +38,7 @@ pip install git+https://github.com/ttumiel/interpret
   - [Objectives](#objectives)
 - [Attribution](#attribution)
   - [Quickstart](#attr-quickstart)
-- [Miscellaneous Interpretations](#miscellaneous-interpretations)
+- [Miscellaneous Interpretations](#misc-interpretations)
   - [Plot Top Losses](#plot-top-losses)
   - [Plot Confusion Matrix](#plot-confusion-matrix)
   - [Plot Dataset Examples](#plot-dataset-examples)
@@ -53,6 +53,7 @@ Tutorial | Link
 ---      | ---
 Introduction to `interpret` | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ttumiel/interpret/blob/master/nbs/Interpret-Intro.ipynb)
 Visualisation Tutorial | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ttumiel/interpret/blob/master/nbs/Visualisation-Tutorial.ipynb)
+Miscellaneous Methods Tutorial | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ttumiel/interpret/blob/master/nbs/Misc-Interpretations-Tutorial.ipynb)
 
 
 <br/>
@@ -166,7 +167,10 @@ saliency_map = Gradcam(network, input_data, im_class=class_number, layer=layer)
 saliency_map.show()
 ```
 
-## Miscellaneous Interpretations
+<br/>
+<div align="center">
+<h2 id='misc-interpretations'>Miscellaneous Interpretations</h2>
+</div>
 
 Included in `interpret` are a few additional interpretation methods that don't neatly fit into visualisation or attribution methods.
 
