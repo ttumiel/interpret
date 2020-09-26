@@ -20,7 +20,7 @@ def test_channel(network, imsize, conv_layer, channel, n_steps):
     assert_loss_decreases(optvis, thresh=n_steps)
 
 def test_shortcut(network, imsize, conv_layer, channel, n_steps):
-    def was_called(m,i,o):
+    def was_called(h,m,i,o):
         raise Exception
 
     with Hook(network['layer4/0/conv1'], was_called):

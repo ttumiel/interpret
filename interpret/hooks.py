@@ -1,6 +1,6 @@
 import torch
 
-class Hook():
+class Hook:
     """
     Create a hook on `m` with `hook_func`.
 
@@ -10,7 +10,6 @@ class Hook():
         self.hook_func = hook_func
         self.detach = detach
         self.clone = clone
-        self.stored = None
         f = m.register_forward_hook if is_forward else m.register_backward_hook
         self.hook = f(self.hook_fn)
         self.removed = False
@@ -25,13 +24,11 @@ class Hook():
             input  = (o.clone() for o in input ) if is_listy(input ) else input.clone()
             output = (o.clone() for o in output) if is_listy(output) else output.clone()
 
-        self.stored = self.hook_func(module, input, output)
+        return self.hook_func(self, module, input, output)
 
     def remove(self):
         "Remove the hook from the model."
-        if not self.removed:
             self.hook.remove()
-            self.removed=True
 
     def __enter__(self, *args):
         return self
@@ -42,14 +39,15 @@ class Hook():
     def __del__(self):
         self.remove()
 
-def _hook_output(m,i,o):
-    return o if isinstance(o,torch.Tensor) else o if is_listy(o) else list(o)
+
+def _hook_output(h,m,i,o):
+    h.stored = o if isinstance(o,torch.Tensor) else o if is_listy(o) else list(o)
 
 def hook_output(model, detach=True, grad=False, clone=False):
     return Hook(model, _hook_output, detach=detach, is_forward=not grad, clone=clone)
 
-def _hook_input(m,i,o):
-    return o if isinstance(o,torch.Tensor) else o if is_listy(o) else list(o)
+def _hook_input(h,m,i,o):
+    h.stored = i if isinstance(i,torch.Tensor) else i if is_listy(i) else list(i)
 
 def hook_input(model, detach=True, grad=False, clone=False):
     return Hook(model, _hook_input, detach=detach, is_forward=not grad, clone=clone)

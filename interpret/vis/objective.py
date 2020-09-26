@@ -104,7 +104,7 @@ class LayerObjective(Objective):
 
     def objective_function(self, x):
         "Apply the input to the network and set the loss."
-        def layer_hook(module, input, output):
+        def layer_hook(hook, module, input, output):
             rank = len(output.shape)
             c = self.channel or slice(None)
             n = self.neuron or slice(None)
@@ -154,7 +154,7 @@ class DeepDreamObjective(Objective):
         self.layer = layer
 
     def objective_function(self, x):
-        def layer_hook(module, input, output):
+        def layer_hook(hook, module, input, output):
             self.loss = -torch.mean(output**2)
 
         with Hook(self.model[self.layer], layer_hook, detach=False, clone=True):
