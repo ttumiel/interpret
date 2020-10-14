@@ -18,7 +18,9 @@ def get_module_item(s,i):
         return l
 
 def set_module_item(self, m, new_m):
-    if "/" in m:
+    if isinstance(self, nn.Sequential) and isinstance(m, int):
+        _orig_seq_set(self, m, new_m)
+    elif "/" in m:
         root, name = m.rsplit('/', maxsplit=1)
         root_module = self[root]
         setattr(root_module, name, new_m)
@@ -27,7 +29,7 @@ def set_module_item(self, m, new_m):
 
 def freeze(s,bn=False):
     def inner(m):
-        if not isinstance(m, (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d)):
+        if bn or not isinstance(m, (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d)):
             if hasattr(m, 'weight') and m.weight is not None:
                 m.weight.requires_grad_(False)
             if hasattr(m, 'bias') and m.bias is not None:
@@ -39,6 +41,7 @@ def unfreeze(s):
         p.requires_grad_(True)
 
 _orig_seq_get = nn.Sequential.__getitem__
+_orig_seq_set = nn.Sequential.__setitem__
 nn.Sequential.__getitem__ = get_module_item
 nn.Module.__getitem__ = get_module_item
 nn.Sequential.__setitem__ = set_module_item
