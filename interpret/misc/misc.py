@@ -1,7 +1,7 @@
 import torch
 import math
 from torch import nn
-from tqdm import tqdm
+from tqdm.autonotebook import tqdm
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -28,7 +28,7 @@ def validate(network, dataloader, metrics=None, device=None):
     all_metrics = [[]*len(metrics)]
 
     with torch.no_grad():
-        for x,y in tqdm(dataloader, leave=False):
+        for x,y in tqdm(dataloader, leave=False, desc='Validating'):
             x,y = x.to(device),y.to(device)
             preds = network(x)
             all_preds.append(preds.detach())
