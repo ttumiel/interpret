@@ -120,8 +120,10 @@ def get_state_dicts(original, dir1=None, dir2=None, step=0.1, dir1_bound=(-1,1),
             yield {k:v+dir1[k]*d1+dir2[k]*d2 for k,v in original.items()}
 
 def normalize_direction(d, w):
-    "Make the norm of the weight and direction the same."
-    return d.mul_(w.norm()/(d.norm() + 1e-10))
+    "Make the norm of the weight and direction the same for every filter."
+    for fd, fw in zip(d, w):
+        fd.mul_(fw.norm()/(fd.norm() + 1e-10))
+    return d
 
 def get_rand_dir(sd):
     "Get random tensors in the shape of all of the elements in the state dict."
