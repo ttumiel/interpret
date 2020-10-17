@@ -126,11 +126,20 @@ def normalize_direction(d, w):
     return d
 
 def get_rand_dir(sd):
-    "Get random tensors in the shape of all of the elements in the state dict."
+    """Get random tensors in the shape of all of the elements in the state dict.
+    Each weight is normalized across each filter.
+    """
     weight_dir = {}
     for k,v in sd.items():
         if v.dtype is torch.float and v.ndim>1:
-            weight_dir[k] = normalize_direction(torch.randn(v.size()).to(v.device)-v, v)
+            weight_dir[k] = normalize_direction(torch.randn(v.size()).to(v.device), v)
         else: # ignore batch norm and integer layers
             weight_dir[k] = torch.zeros_like(v)
+    return weight_dir
+
+def get_dir_from_target(sd, target_sd):
+    "Get a direction vector starting at sd and ending at target_sd"
+    weight_dir = {}
+    for k,v in sd.items():
+        weight_dir[k] = target_sd[k] - v
     return weight_dir
