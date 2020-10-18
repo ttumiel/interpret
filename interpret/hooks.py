@@ -28,7 +28,7 @@ class Hook:
 
     def remove(self):
         "Remove the hook from the model."
-            self.hook.remove()
+        self.hook.remove()
 
     def __enter__(self, *args):
         return self
