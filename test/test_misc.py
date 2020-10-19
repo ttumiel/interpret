@@ -3,7 +3,8 @@ from torch import nn
 
 from interpret import (top_losses, confusion_matrix,
     plot_top_losses, plot_confusion_matrix,
-    get_dataset_examples, plot_dataset_examples)
+    get_dataset_examples, plot_dataset_examples,
+    loss_landscape, plot_loss_landscape)
 
 class DeterministicNetwork(nn.Module):
     "A fake module that returns what you give it sequentially."
@@ -63,3 +64,11 @@ def test_dataset_examples(network, dataloader, device, conv_layer, channel):
 
     plot_dataset_examples(2, dataloader, idxs=idxs)
     plot_dataset_examples(2, dataloader, network=network, layer=conv_layer, channel=channel)
+
+
+def test_loss_landscape(network, dataloader, device):
+    X,Y,Z = loss_landscape(network, dataloader, device=device)
+    assert X.shape == Y.shape == Z.shape
+
+    plot_loss_landscape((X,Y,Z))
+    plot_loss_landscape((X,Y,Z), mode='contour')
