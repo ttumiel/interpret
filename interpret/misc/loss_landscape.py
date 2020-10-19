@@ -66,10 +66,7 @@ def loss_landscape(network, dataloader, dir1=None, dir2=None, dir1_bound=(-1,1),
     X = np.arange(dir1_bound[0],dir1_bound[1]+step,step)
     Y = np.arange(dir2_bound[0],dir2_bound[1]+step,step)
     X,Y = np.meshgrid(X,Y)
-
     Z = np.array(losses).reshape((x_pts, y_pts)).T
-    if proc_fn is not None: Z = proc_fn(Z)
-    if clip is not None: Z = np.clip(Z, *clip)
 
     return X,Y,Z
 
@@ -83,6 +80,11 @@ def plot_loss_landscape(XYZ=None, network=None, dl=None, mode='surface', elevati
         XYZ (tuple): The outputs of `loss_landscape`.
         network (nn.Module): Trained pytorch network to get the landscape of.
         mode (str): 'surface' or 'contour'
+        proc_fn (callable): function to post process the losses.
+            Use np.log to smooth large spikes in the landscape.
+            Use np.sqrt for less smoothing.
+            Use None to apply no post-processing.
+        clip (tuple): Clip the min and max loss values. Use None to ignore.
         elevation (int): elevation to view the surface plot from.
         angle (int): angle to view the surface plot from.
         levels (list): the levels of the contour plot to show. Defaults to
@@ -95,6 +97,10 @@ def plot_loss_landscape(XYZ=None, network=None, dl=None, mode='surface', elevati
     """
     assert (XYZ is not None) ^ (network is not None and dl is not None), "Either XYZ or network must be set."
     X,Y,Z = loss_landscape(network, dl) if network is not None else XYZ
+
+    # Post-process loss values
+    if proc_fn is not None: Z = proc_fn(Z)
+    if clip is not None: Z = np.clip(Z, *clip)
 
     if mode == 'contour':
         levels = levels if levels is not None else np.arange(np.min(Z),np.max(Z),0.5)
