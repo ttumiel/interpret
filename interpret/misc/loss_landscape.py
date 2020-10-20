@@ -67,17 +67,14 @@ def loss_landscape(network, dataloader, loss_fn=nn.CrossEntropyLoss(), dir1=None
 
     return X,Y,Z
 
-def plot_loss_landscape(XYZ=None, network=None, dl=None, mode='surface', proc_fn=np.log,
+def plot_loss_landscape(loss_landscape, mode='surface', proc_fn=np.log,
                         clip=(-3,10), elevation=40, angle=45, levels=None, figsize=(10,10),
                         label=False, cmap='viridis', **pyplot_kwds):
     """Plot the loss landscape as either a surface or contour plot.
-    Use the outputs of `loss_landscape` directly or provide the network
-    and dataloader to create the landscape from.
+    Use the outputs of `loss_landscape` as the first argument.
 
     Parameters:
-        XYZ (tuple): The outputs of `loss_landscape`.
-        network (nn.Module): Trained pytorch network to get the landscape of.
-        dl (DataLoader): Pytorch dataloader for landscape generation.
+        loss_landscape (tuple): The outputs of `loss_landscape`.
         mode (str): 'surface' or 'contour'
         proc_fn (callable): function to post process the losses.
             Use np.log to smooth large spikes in the landscape.
@@ -96,8 +93,7 @@ def plot_loss_landscape(XYZ=None, network=None, dl=None, mode='surface', proc_fn
     Returns (Axes):
         pyplot axes with the image.
     """
-    assert (XYZ is not None) ^ (network is not None and dl is not None), "Either XYZ or network must be set."
-    X,Y,Z = loss_landscape(network, dl) if network is not None else XYZ
+    X,Y,Z = loss_landscape
 
     # Post-process loss values
     if proc_fn is not None: Z = proc_fn(Z)
