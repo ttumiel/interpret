@@ -22,6 +22,7 @@ def show_images(batched_tensor, normalize=False, figsize=(5,5), axis=False, labe
             show_image(batched_tensor[i],normalize,ax, **kwargs)
             if labels is not None: ax.set_title(f'{labels[i]}')
         if not axis: ax.set_axis_off()
+    return axes
 
 def plot(y, x=None, title=None, ax=None, x_lb=None, y_lb=None, label=None):
     if ax is None:

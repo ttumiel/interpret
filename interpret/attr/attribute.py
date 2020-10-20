@@ -66,7 +66,7 @@ class Attribute():
         return self.__mul__(-1.)
 
     # TODO: Generalise this method to non-image data
-    def show(self, ax=None, show_image=True, alpha=0.4, cmap='magma', colorbar=False):
+    def show(self, ax=None, show_image=True, alpha=0.4, cmap='magma', colorbar=False, **kwargs):
         """Show the generated attribution map.
 
         Parameters:
@@ -75,13 +75,14 @@ class Attribute():
             colorbar (bool): show a colorbar.
             cmap: matplotlib colourmap.
             alpha (float): transparency value alpha for heatmap.
+            kwargs: passed to `denorm`. Used to change mean and std normalization values.
         """
         if ax is None:
             _,ax = plt.subplots()
 
         sz = list(self.input_data.shape[2:])
         if show_image:
-            input_image = denorm(self.input_data[0])
+            input_image = denorm(self.input_data[0], **kwargs)
             ax.imshow(input_image)
 
         data = self.data

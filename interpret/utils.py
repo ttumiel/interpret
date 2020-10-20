@@ -2,6 +2,7 @@ import torch
 from pathlib import Path
 from PIL import Image
 import numpy as np
+from torch import nn
 
 from interpret.imagenet import imagenet_stats
 
@@ -99,7 +100,7 @@ def find_all(model, module_type, path=False, _upper_name=""):
             matches += [m]
             if path:
                 pathnames += [_upper_name + pathname]
-        else:
+        elif isinstance(m, nn.Module):
             next_find = find_all(m, module_type, path=path, _upper_name=_upper_name+pathname + '/')
             if path:
                 matches += next_find[0]
