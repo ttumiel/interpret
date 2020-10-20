@@ -42,8 +42,11 @@ def validate(network, dataloader, metrics=None, device=None):
     del all_preds, all_ys, all_metrics
     return (p, y) + m
 
-def top_losses(network, dataloader, loss_fn, device=None):
-    """Find the dataset examples that result in the largest loss.
+def sort_by_metric(network, dataloader, loss_fn, descending=True, device=None):
+    """Sort all the dataset examples by a particular metric.
+    Usually it is useful to plot the dataset examples that result in
+    the largest and smallest values for a particular metric. For example
+    the predictions that result in the largest loss may be mis-labelled.
 
     Parameters:
         network (nn.Module): the trained network on which to search
@@ -51,6 +54,8 @@ def top_losses(network, dataloader, loss_fn, device=None):
         dataloader (DataLoader): a dataloader containing the inputs
             to the network.
         loss_fn (Callable): the loss function that is minimised.
+        descending (bool): sort the results from largest to smallest.
+        device: torch device.
 
     Returns: (Tensor, Tensor, Tensor, Tensor)
         A tuple of the sorted predictions, targets, losses,
@@ -65,11 +70,10 @@ def top_losses(network, dataloader, loss_fn, device=None):
 
     p,y,l = validate(network, dataloader, [loss_fn], device)
 
-    idxs = torch.argsort(l, descending=True)
+    idxs = torch.argsort(l, descending=descending)
     return p[idxs], y[idxs], l[idxs], idxs
 
-def plot_top_losses(network, dataloader, loss_fn, *top_losses_out, device=None,
-                    n=9, figsize=(10,10), gradcam=False, layer=0, show_image=True):
+top_losses = sort_by_metric
     """Plot the top losses that are returned by `top_losses()`
 
     Inspired by fastai's plot_top_losses method.
