@@ -8,13 +8,19 @@ import numpy as np
 from interpret import show_images, Gradcam, LayerObjective
 
 __all__ = [
-    'validate', 'top_losses', 'plot_top_losses',
+    'validate', 'sort_by_metric',
+    'top_losses', 'plot_top_losses',
     'confusion_matrix', 'plot_confusion_matrix',
-    'get_dataset_examples', 'plot_dataset_examples'
+    'dataset_examples', 'plot_dataset_examples'
     ]
 
 def validate(network, dataloader, metrics=None, device=None):
     """Validate a dataset on a trained network with a set of metrics.
+
+    The metrics functions are applied on each prediction and target batch,
+    individually, and then stacked before returning. For metrics on every
+    prediction, make sure the metric has no reduction or make sure the
+    batch size is 1.
 
     Returns (tuple):
         Tuple of (predictions, labels, *metrics)
@@ -126,20 +132,13 @@ def confusion_matrix(network, dataloader, num_classes, device=None):
 
     return get_cm(y, preds, labels=np.arange(num_classes)).astype(int)
 
-def plot_confusion_matrix(num_classes, cm=None, network=None, dataloader=None,
-                          device=None, decode_label=None):
+def plot_confusion_matrix(cm, device=None, decode_label=None, figsize=(7,6)):
     "Plot the confusion matrix created by `confusion_matrix`"
-    assert cm is not None or (network is not None and dataloader is not None)
-    if cm is None:
-        cm = confusion_matrix(network, dataloader, num_classes).astype('int')
-    else:
-        assert cm.shape[0] == num_classes and cm.shape[1] == num_classes
-        cm = cm.astype(int)
-
-    ticks = np.arange(num_classes)
+    n = len(cm)
+    ticks = np.arange(n)
     classes = [decode_label[i] for i in ticks] if decode_label is not None else ticks
 
-    fig, ax = plt.subplots(figsize=(7,6))
+    fig, ax = plt.subplots(figsize=figsize)
     ax.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
 
     ax.set(
@@ -147,8 +146,8 @@ def plot_confusion_matrix(num_classes, cm=None, network=None, dataloader=None,
         yticks=ticks,
         xticklabels=classes,
         yticklabels=classes,
-        xlim=(-0.5,num_classes-0.5),
-        ylim=(num_classes-0.5,-0.5),
+        xlim=(-0.5,n-0.5),
+        ylim=(n-0.5,-0.5),
         ylabel='True Label',
         xlabel='Predicted Label')
 
@@ -165,8 +164,7 @@ def plot_confusion_matrix(num_classes, cm=None, network=None, dataloader=None,
     fig.tight_layout()
     return ax
 
-
-def get_dataset_examples(network, dataloader, layer, channel=None, device=None, **layer_kwargs):
+def dataset_examples(network, dataloader, layer, channel=None, device=None, **layer_kwargs):
     """Sample dataset examples that most highly activate a particular
     LayerObjective. Useful to decipher some of the more obscure looking
     visualisations.
