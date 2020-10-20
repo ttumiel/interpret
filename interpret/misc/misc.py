@@ -19,7 +19,7 @@ def validate(network, dataloader, metrics=None, device=None):
     Returns (tuple):
         Tuple of (predictions, labels, *metrics)
     """
-    device = ('cuda' if torch.cuda.is_available() else 'cpu') if device is None else device
+    device = _get_device(device)
     network.eval().to(device)
     if metrics is None: metrics = []
 
@@ -57,8 +57,7 @@ def top_losses(network, dataloader, loss_fn, device=None):
         and the indexes in the dataset.
     """
     _check_shuffle(dataloader)
-    device = ('cuda' if torch.cuda.is_available() else 'cpu') if device is None else device
-    network.eval().to(device)
+    device = _get_device(device)
     if hasattr(loss_fn, 'reduction'):
         loss_fn.reduction = 'none'
     else:
@@ -207,7 +206,7 @@ def get_dataset_examples(network, dataloader, layer, channel=None, device=None, 
         The sorted indices of the items that most activate the layer.
     """
     _check_shuffle(dataloader)
-    device = ('cuda' if torch.cuda.is_available() else 'cpu') if device is None else device
+    device = _get_device(device)
     network.eval().to(device)
     obj = LayerObjective(network, layer, channel, batchwise=True, **layer_kwargs)
 
@@ -238,3 +237,6 @@ def plot_dataset_examples(n, dataloader, denorm=True, network=None, layer=None,
 def _check_shuffle(dl):
     assert not isinstance(dl.sampler, torch.utils.data.RandomSampler), \
         "DataLoader should not be shuffled."
+
+def _get_device(dv):
+    return ('cuda' if torch.cuda.is_available() else 'cpu') if dv is None else dv
