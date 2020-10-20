@@ -39,9 +39,10 @@ pip install git+https://github.com/ttumiel/interpret
 - [Attribution](#attribution)
   - [Quickstart](#attr-quickstart)
 - [Miscellaneous Interpretations](#misc-interpretations)
-  - [Plot Top Losses](#plot-top-losses)
-  - [Plot Confusion Matrix](#plot-confusion-matrix)
-  - [Plot Dataset Examples](#plot-dataset-examples)
+  - [Top Losses](#top-losses)
+  - [Confusion Matrix](#confusion-matrix)
+  - [Dataset Examples](#dataset-examples)
+  - [Loss Landscape](#loss-landscape)
 
 
 
@@ -174,21 +175,27 @@ saliency_map.show()
 
 Included in `interpret` are a few additional interpretation methods that don't neatly fit into visualisation or attribution methods.
 
-### Plot Top Losses
+### Top Losses
 
 Plot the inputs that result in the largest loss. Useful for identifying where your network is most unsure or where the inputs actually don't fit the label given (a mislabelled image). You can also enable a Grad-CAM attribution overlay for each image so that you can tell where the network is looking.
 
 <img src="./images/top_losses.png" alt="Top losses plotted with Grad-CAM attribution overlay." width="500px"/>
 
-### Plot Confusion Matrix
+### Confusion Matrix
 
 Plot a confusion matrix for a multi-class classification or binned regression objective.
 
 ![Confusion matrix on 10 classes](./images/confusion_mat.png)
 
-### Plot Dataset Examples
+### Dataset Examples
 
 Plot some dataset examples that maximise a particular `LayerObjective` from the visualisation objectives described above. Useful for identifying clear examples of what the network is looking for in a particular visualisation using real examples.
 
 ![Comparison between a layer visualisation and dataset examples that also activate the same layer.](./images/dataset_examples.jpg)
+
+### Loss Landscape
+
+Plot the loss landscape in 2 directions around a trained network optimum. You can plot both a surface plot and a contour plot. For details, see [Li et al](https://arxiv.org/abs/1712.09913). Below we see how adding shortcut connections in a ResNet56 makes the loss landscape much smoother. Note the difference in scale.
+
+![Comparison of loss landscape between a ResNet56 with shortcut connections and without.](./images/loss_landscape.jpg)
 
